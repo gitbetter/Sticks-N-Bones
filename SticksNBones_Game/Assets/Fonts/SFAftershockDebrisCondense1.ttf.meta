@@ -1,0 +1,23 @@
+fileFormatVersion: 2
+guid: ff15fa0cc14025f47a6d44d2bad7ce3d
+TrueTypeFontImporter:
+  externalObjects: {}
+  serializedVersion: 4
+  fontSize: 16
+  forceTextureCase: -2
+  characterSpacing: 0
+  characterPadding: 1
+  includeFontData: 1
+  fontName: SF Aftershock Debris Condensed
+  fontNames:
+  - SF Aftershock Debris Condensed
+  fallbackFontReferences:
+  - {fileID: 12800000, guid: 3d8e0835f6e3fa24eab6dbd8cce755b3, type: 3}
+  customCharacters: 
+  fontRenderingMode: 0
+  ascentCalculationMode: 1
+  useLegacyBoundsCalculation: 0
+  shouldRoundAdvanceValue: 1
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 

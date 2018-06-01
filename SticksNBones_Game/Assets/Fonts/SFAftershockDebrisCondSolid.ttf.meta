@@ -1,0 +1,23 @@
+fileFormatVersion: 2
+guid: e25a63b9b2147424aa787c02fc195ca2
+TrueTypeFontImporter:
+  externalObjects: {}
+  serializedVersion: 4
+  fontSize: 16
+  forceTextureCase: -2
+  characterSpacing: 0
+  characterPadding: 1
+  includeFontData: 1
+  fontName: SF Aftershock Debris CondSolid
+  fontNames:
+  - SF Aftershock Debris CondSolid
+  fallbackFontReferences:
+  - {fileID: 12800000, guid: a3fef52443c5c834ab1fa68ec8f4df5f, type: 3}
+  customCharacters: 
+  fontRenderingMode: 0
+  ascentCalculationMode: 1
+  useLegacyBoundsCalculation: 0
+  shouldRoundAdvanceValue: 1
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 

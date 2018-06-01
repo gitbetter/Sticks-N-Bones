@@ -1,0 +1,23 @@
+fileFormatVersion: 2
+guid: 77ce197cd77f2a942b01a10f958fd830
+TrueTypeFontImporter:
+  externalObjects: {}
+  serializedVersion: 4
+  fontSize: 16
+  forceTextureCase: -2
+  characterSpacing: 0
+  characterPadding: 1
+  includeFontData: 1
+  fontName: SF Aftershock Debris Solid
+  fontNames:
+  - SF Aftershock Debris Solid
+  fallbackFontReferences:
+  - {fileID: 12800000, guid: 2ed1e93e01685654babff24322d3b934, type: 3}
+  customCharacters: 
+  fontRenderingMode: 0
+  ascentCalculationMode: 1
+  useLegacyBoundsCalculation: 0
+  shouldRoundAdvanceValue: 1
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
