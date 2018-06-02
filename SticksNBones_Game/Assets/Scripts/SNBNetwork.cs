@@ -34,16 +34,27 @@ public class SNBNetwork : MonoBehaviour {
     }
 
     public void GetRandomMatch(Action<Byte[]> callback) {
-        sock.Send(Encoding.UTF8.GetBytes("match:random"));
+        SendAndReceiveAsync(Encoding.UTF8.GetBytes("match:random"), callback);
+    }
 
-        Byte[] receivedData = new Byte[maxBufferSize];
-        SocketAsyncEventArgs asyncEventArgs = new SocketAsyncEventArgs();
-        asyncEventArgs.SetBuffer(receivedData, 0, maxBufferSize);
-        asyncEventArgs.Completed += (sender, e) => {
-            print("Bytes Received: " + e.BytesTransferred);
-            callback(e.Buffer);
-        };
+    public void TerminateConnection(Action<Byte[]> callback) {
+        SendAndReceiveAsync(Encoding.UTF8.GetBytes("exit"), callback);
+    }
 
-        sock.ReceiveAsync(asyncEventArgs);
+    private void SendAndReceiveAsync(Byte[] message, Action<Byte[]> callback) {
+        if (sock.Connected) {
+            sock.Send(message);
+
+            Byte[] receivedData = new Byte[maxBufferSize];
+            SocketAsyncEventArgs asyncEventArgs = new SocketAsyncEventArgs();
+            asyncEventArgs.SetBuffer(receivedData, 0, maxBufferSize);
+            asyncEventArgs.Completed += (sender, e) => {
+                callback(e.Buffer);
+            };
+
+            sock.ReceiveAsync(asyncEventArgs);
+        } else {
+            callback(new Byte[] { });
+        }
     }
 }

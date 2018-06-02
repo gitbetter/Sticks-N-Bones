@@ -232,7 +232,7 @@ GameObject:
   - component: {fileID: 95001726303764992}
   - component: {fileID: 320222881335989054}
   m_Layer: 0
-  m_Name: Joe
+  m_Name: IntroClassico
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -815,5 +815,9 @@ PlayableDirector:
     value: {fileID: 1472540976428096}
   - key: {fileID: 114605436368755040, guid: 03404964f339fdc4cb863ecd309ec1b6, type: 2}
     value: {fileID: 1472540976428096}
+  - key: {fileID: 114966835345271718, guid: 03404964f339fdc4cb863ecd309ec1b6, type: 2}
+    value: {fileID: 0}
+  - key: {fileID: 114583392731243942, guid: 03404964f339fdc4cb863ecd309ec1b6, type: 2}
+    value: {fileID: 0}
   m_ExposedReferences:
     m_References: []

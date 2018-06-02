@@ -41,3 +41,7 @@ class CL:
     @staticmethod
     def PrintUsage():
         pass
+
+    @staticmethod
+    def PrintBanner():
+        pass

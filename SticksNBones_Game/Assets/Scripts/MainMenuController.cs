@@ -1,13 +1,12 @@
-﻿using System.Collections;
+﻿using System;
+using System.Text;
+using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+
 using TMPro;
-using System;
-using System.Text;
 
 public class MainMenuController : MonoBehaviour {
-
-    // todo: setup network connection to python server using native System.Net sockets
 
     [SerializeField] TextMeshProUGUI pressToStartText;
     [SerializeField] AudioClip logoCrashAudio;
@@ -15,21 +14,31 @@ public class MainMenuController : MonoBehaviour {
     [SerializeField] float menuMusicVolume = 0.5f;
 
     SNBNetwork snbNet;
-
     Animator menuAnimator;
     enum MenuScreens { None, First, Main, Settings };
     MenuScreens currentScreen = MenuScreens.None;
+    Queue<Action> mainThreadEvents = new Queue<Action>();
 
     private void Start()
     {
         menuAnimator = GetComponent<Animator>();
-        snbNet = FindObjectOfType<SNBNetwork>();
+        snbNet = FindObjectOfType<SNBNetwork>();        
     }
 
-    private void Update()
-    {
-        if (Input.anyKeyDown && currentScreen == MenuScreens.First)
-        {
+    private void Update() {
+        NavigateMenu();
+        DispatchActions();
+    }
+
+    private void DispatchActions() {
+        while (mainThreadEvents.Count > 0) {
+            Action action = mainThreadEvents.Dequeue();
+            action();
+        }
+    }
+
+    private void NavigateMenu() {
+        if (Input.anyKeyDown && currentScreen == MenuScreens.First) {
             GoToMainMenu();
         }
     }
@@ -37,8 +46,12 @@ public class MainMenuController : MonoBehaviour {
     public void PlayQuickMatch()
     {
         snbNet.GetRandomMatch((bytes) => {
-            // todo: include result argument
-            print("Got new match: " + Encoding.UTF8.GetString(bytes));
+            mainThreadEvents.Enqueue(() => {
+                JSONObject response = new JSONObject(Encoding.UTF8.GetString(bytes));
+                if (response.Count > 0) {
+                    // Todo: continue processing. Transition "Looking for opponent" component
+                }
+            });        
         });
     }
 
@@ -54,8 +67,12 @@ public class MainMenuController : MonoBehaviour {
 
     public void QuitGame()
     {
-        Debug.Log("Quitting...");
-        Application.Quit();
+        snbNet.TerminateConnection((bytes) => {
+            mainThreadEvents.Enqueue(() => {
+                Debug.Log("Quitting...");
+                Application.Quit();
+            });
+        });
     }
 
     private void PlayLogoCrash()

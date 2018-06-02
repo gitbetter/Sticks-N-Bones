@@ -35,8 +35,6 @@ class Server():
             try:
                 sock, caddr = self.sock.accept()
                 client = ClientHandler(sock, caddr)
-                self.online_clients.append(client)
-                print("|Sticks N' Bones| - New connection from %s:%s" % caddr)
             except OSError:
                 self.running = False
 
@@ -53,6 +51,16 @@ class Server():
 
         self.Shutdown()
 
+    def AddClient(self, client):
+        # todo: lock online_clients list and add client
+        self.online_clients.append(client)
+        pass
+
+    def RemoveClient(self, client):
+        # todo: lock online_clients list and remove client
+        self.online_clients.remove(client)
+        pass
+
     def Start(self, port=50777, interface=''):
         self.port = int(port)
         self.interface = interface
@@ -62,7 +70,7 @@ class Server():
 
     def Shutdown(self):
         for client in self.online_clients:
-            client.sock.close()
+            client.CloseConnection()
         self.sock.close()
         sys.exit(0)
 

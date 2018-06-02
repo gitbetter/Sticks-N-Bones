@@ -26,7 +26,7 @@ namespace MK.Toon
     public class MKToonFreeEditor : ShaderGUI
     {
         //hdr config
-        private ColorPickerHDRConfig colorPickerHDRConfig = new ColorPickerHDRConfig(0f, 99f, 1 / 99f, 3f);
+        private ColorPickerHDRConfig colorPickerHDRConfig = new ColorPickerHDRConfig(0f, 99f, 1 / 99f, 3f);        
 
         //Editor Properties
         private MaterialProperty showMainBehavior = null;

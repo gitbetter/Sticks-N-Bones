@@ -1,0 +1,155 @@
+fileFormatVersion: 2
+guid: f7b17521d4414f742a03e1bd8a5117c7
+ModelImporter:
+  serializedVersion: 22
+  fileIDToRecycleName:
+    100000: Armature
+    100002: armik_l
+    100004: armik_r
+    100006: base
+    100008: chest
+    100010: //RootNode
+    100012: collar_l
+    100014: collar_r
+    100016: Cylinder_001
+    100018: elbowik_l
+    100020: elbowik_r
+    100022: head
+    100024: lowerarm_l
+    100026: lowerarm_r
+    100028: lowerleg_l
+    100030: lowerleg_r
+    100032: neck
+    100034: pelvis
+    100036: root
+    100038: stomach
+    100040: thigh_l
+    100042: thigh_r
+    100044: upperarm_l
+    100046: upperarm_r
+    400000: Armature
+    400002: armik_l
+    400004: armik_r
+    400006: base
+    400008: chest
+    400010: //RootNode
+    400012: collar_l
+    400014: collar_r
+    400016: Cylinder_001
+    400018: elbowik_l
+    400020: elbowik_r
+    400022: head
+    400024: lowerarm_l
+    400026: lowerarm_r
+    400028: lowerleg_l
+    400030: lowerleg_r
+    400032: neck
+    400034: pelvis
+    400036: root
+    400038: stomach
+    400040: thigh_l
+    400042: thigh_r
+    400044: upperarm_l
+    400046: upperarm_r
+    2100000: StickMan
+    4300000: Cylinder_001
+    7400000: Default Take
+    7400002: Air
+    7400004: AirKick_Begin
+    7400006: AirKick_End
+    7400008: AirPunch
+    7400010: ArcFall
+    7400012: Dash
+    7400014: Fall
+    7400016: Hit
+    7400018: Idle
+    7400020: Land
+    7400022: MovingJump
+    7400024: ShortPunch
+    7400026: SimpleKick
+    7400028: SimplePunch
+    7400030: StaticJump
+    7400032: Uppercut
+    9500000: //RootNode
+    13700000: Cylinder_001
+  externalObjects: {}
+  materials:
+    importMaterials: 1
+    materialName: 0
+    materialSearch: 1
+    materialLocation: 1
+  animations:
+    legacyGenerateAnimations: 4
+    bakeSimulation: 0
+    resampleCurves: 1
+    optimizeGameObjects: 0
+    motionNodeName: 
+    rigImportErrors: 
+    rigImportWarnings: 
+    animationImportErrors: 
+    animationImportWarnings: 
+    animationRetargetingWarnings: 
+    animationDoRetargetingWarnings: 0
+    importAnimatedCustomProperties: 0
+    importConstraints: 0
+    animationCompression: 1
+    animationRotationError: 0.5
+    animationPositionError: 0.5
+    animationScaleError: 0.5
+    animationWrapMode: 0
+    extraExposedTransformPaths: []
+    extraUserProperties: []
+    clipAnimations: []
+    isReadable: 1
+  meshes:
+    lODScreenPercentages: []
+    globalScale: 1
+    meshCompression: 0
+    addColliders: 0
+    importVisibility: 1
+    importBlendShapes: 1
+    importCameras: 1
+    importLights: 1
+    swapUVChannels: 0
+    generateSecondaryUV: 0
+    useFileUnits: 1
+    optimizeMeshForGPU: 1
+    keepQuads: 0
+    weldVertices: 1
+    preserveHierarchy: 0
+    indexFormat: 0
+    secondaryUVAngleDistortion: 8
+    secondaryUVAreaDistortion: 15.000001
+    secondaryUVHardAngle: 88
+    secondaryUVPackMargin: 4
+    useFileScale: 1
+  tangentSpace:
+    normalSmoothAngle: 60
+    normalImportMode: 0
+    tangentImportMode: 3
+    normalCalculationMode: 4
+  importAnimation: 1
+  copyAvatar: 0
+  humanDescription:
+    serializedVersion: 2
+    human: []
+    skeleton: []
+    armTwist: 0.5
+    foreArmTwist: 0.5
+    upperLegTwist: 0.5
+    legTwist: 0.5
+    armStretch: 0.05
+    legStretch: 0.05
+    feetSpacing: 0
+    rootMotionBoneName: 
+    rootMotionBoneRotation: {x: 0, y: 0, z: 0, w: 1}
+    hasTranslationDoF: 0
+    hasExtraRoot: 0
+    skeletonHasParents: 1
+  lastHumanDescriptionAvatarSource: {instanceID: 0}
+  animationType: 2
+  humanoidOversampling: 1
+  additionalBone: 0
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
