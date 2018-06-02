@@ -70,6 +70,7 @@ ModelImporter:
     7400028: SimplePunch
     7400030: StaticJump
     7400032: Uppercut
+    7400034: Pose1
     9500000: //RootNode
     13700000: Cylinder_001
   externalObjects: {}

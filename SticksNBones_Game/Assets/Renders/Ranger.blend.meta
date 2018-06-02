@@ -69,25 +69,16 @@ ModelImporter:
     7400018: Idle
     7400020: Land
     7400022: MovingJump
-    7400024: ShortPunch
-    7400026: SimpleKick
-    7400028: SimplePunch
-    7400030: StaticJump
-    7400032: Uppercut
+    7400024: Pose1
+    7400026: ShortPunch
+    7400028: SimpleKick
+    7400030: SimplePunch
+    7400032: StaticJump
+    7400034: Uppercut
     9500000: //RootNode
     13700000: Cylinder_001
     13700002: hat_group1
-  externalObjects:
-  - first:
-      type: UnityEngine:Material
-      assembly: UnityEngine.CoreModule
-      name: Sombrero
-    second: {fileID: 2100000, guid: 5d03dfcd69131ee42945b4356c30c856, type: 2}
-  - first:
-      type: UnityEngine:Material
-      assembly: UnityEngine.CoreModule
-      name: StickMan
-    second: {fileID: 2100000, guid: 0c3f7d31e98fab24da0ec7a9e1149049, type: 2}
+  externalObjects: {}
   materials:
     importMaterials: 1
     materialName: 0

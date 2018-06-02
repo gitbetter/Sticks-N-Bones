@@ -45,6 +45,7 @@ public class MainMenuController : MonoBehaviour {
 
     public void PlayQuickMatch()
     {
+        GoToCharacterSelect();
         snbNet.GetRandomMatch((bytes) => {
             mainThreadEvents.Enqueue(() => {
                 JSONObject response = new JSONObject(Encoding.UTF8.GetString(bytes));
@@ -93,6 +94,12 @@ public class MainMenuController : MonoBehaviour {
 
     private void GoToMainMenu()
     {
+        menuAnimator.SetBool("FirstLoad", false);
         menuAnimator.SetBool("MainLoad", true);
+    }
+
+    private void GoToCharacterSelect() {
+        menuAnimator.SetBool("MainLoad", false);
+        menuAnimator.SetBool("CharacterSelectLoad", true);
     }
 }

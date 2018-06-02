@@ -333,6 +333,20 @@ Prefab:
       propertyPath: m_SceneBindings.Array.data[4].value
       value: 
       objectReference: {fileID: 1058114607}
+    - target: {fileID: 320222881335989054, guid: e7ce71f8f899ede40bd5696c784b62e6,
+        type: 2}
+      propertyPath: m_SceneBindings.Array.data[1].value
+      value: 
+      objectReference: {fileID: 1058114606}
+    - target: {fileID: 320222881335989054, guid: e7ce71f8f899ede40bd5696c784b62e6,
+        type: 2}
+      propertyPath: m_SceneBindings.Array.data[2].value
+      value: 
+      objectReference: {fileID: 1058114606}
+    - target: {fileID: 1472540976428096, guid: e7ce71f8f899ede40bd5696c784b62e6, type: 2}
+      propertyPath: m_IsActive
+      value: 1
+      objectReference: {fileID: 0}
     m_RemovedComponents: []
   m_ParentPrefab: {fileID: 100100000, guid: e7ce71f8f899ede40bd5696c784b62e6, type: 2}
   m_IsPrefabParent: 0
