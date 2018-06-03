@@ -9,6 +9,7 @@ TagManager:
   - CharacterSelectPreview
   - CharacterName
   - MenuBackButton
+  - SettingsMenuOption
   layers:
   - Default
   - TransparentFX

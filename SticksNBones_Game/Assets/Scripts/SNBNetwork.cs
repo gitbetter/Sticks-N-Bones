@@ -8,27 +8,65 @@ using System.Text;
 
 public class SNBNetwork : MonoBehaviour {
 
-    [SerializeField] string serverAddress = "127.0.0.1";
-    [SerializeField] int port = 50777;
-    [SerializeField] int connectionRetries = 3;
-    [SerializeField] int maxBufferSize = 1048;
 
-    Socket sock;
-
-    private void Start() {
-        sock = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
-        TryConnection();
+    public string serverAddress {
+        get { return _serverAddress; }
+        set {
+            _serverAddress = value;
+            ResetSocketConnection();
+        }
     }
 
-    private void TryConnection() {
-        sock.BeginConnect(new[] { IPAddress.Parse(serverAddress) }, port, new AsyncCallback(ConnectionCallback), sock);
+    public int port {
+        get { return _port;  }
+        set {
+            _port = value;
+            ResetSocketConnection();
+        }
+    }
+
+    private string _serverAddress = "127.0.0.1";
+    private int _port = 50777;
+    public int connectionRetries = 3;
+    public int maxBufferSize = 1048;
+    
+    public static SNBNetwork instance = null;
+
+    private Socket sock = null;
+
+    private void Awake() {
+        if (SNBNetwork.instance == null) {
+            SNBNetwork.instance = this;
+        } else if (SNBNetwork.instance != this) {
+            Destroy(gameObject);
+        }
+        DontDestroyOnLoad(gameObject);
+        InitSocketConnection();
+    }
+
+    private void InitSocketConnection() {        
+        sock = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
+        TrySocketConnection();
+    }
+
+    private void TrySocketConnection() {
+        sock.BeginConnect(new[] { IPAddress.Parse(_serverAddress) }, _port, new AsyncCallback(ConnectionCallback), sock);
+    }
+
+
+    private void ResetSocketConnection() {
+        if (sock != null && sock.Connected) {
+            sock.Close();
+        }
+        TrySocketConnection();
     }
 
     private void ConnectionCallback(IAsyncResult ar) {
         if (!sock.Connected && connectionRetries > 0) {
             --connectionRetries;
-            TryConnection();
+            TrySocketConnection();
         } else {
+            
                 // todo: could not connect to server error
         }          
     }
