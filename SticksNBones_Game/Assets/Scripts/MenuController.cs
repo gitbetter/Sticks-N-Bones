@@ -28,13 +28,18 @@ public class MenuController : MonoBehaviour {
     [Header("Network")]
     [SerializeField] SNBNetwork networkController;
     [SerializeField] float messageTTL = 3.0f;
+    [SerializeField] Sprite successSprite;
+    [SerializeField] Sprite errorSprite;
+    [SerializeField] Sprite loadingSprite;
 
-    private enum MenuScreens { None, First, Main, Settings };
-    private enum CharacterType { Classico, Ranger };
+    [Header("Matchmaking")]
+    [SerializeField] MatchHandler currentMatch;
+
+    private enum MenuScreens { None, First, Main, Settings, Character };
 
     MenuScreens currentScreen = MenuScreens.None;
     Queue<Action> mainThreadEvents = new Queue<Action>();
-    CharacterType currentSprite = CharacterType.Classico;
+    CharacterType currentCharacter = CharacterType.Classico;
     Animator menuAnimator;
     Resolution[] resolutions;
 
@@ -79,8 +84,8 @@ public class MenuController : MonoBehaviour {
             GameObject cont = selectionContainers[i];
             if (cont.GetComponentInChildren<Button>().gameObject == EventSystem.current.currentSelectedGameObject) {
                 cont.GetComponent<Image>().color = new Color(1f, 0.9896f, 0);
-                if ((int)currentSprite != i) {
-                    currentSprite = (CharacterType)i;
+                if ((int)currentCharacter != i) {
+                    currentCharacter = (CharacterType)i;
                     menuAnimator.Play("CharacterSelectionChangedAnimation", -1, 0f);
                 }
             } else {
@@ -95,7 +100,9 @@ public class MenuController : MonoBehaviour {
         networkController.GetRandomMatch((response) => {
             mainThreadEvents.Enqueue(() => {
                 if (response.Count > 0) {
-                    // Todo: continue processing. Transition from "Looking for opponent" message
+                    Instantiate(currentMatch);
+                    currentMatch.opponentIp = response["ip"].str;
+                    currentMatch.opponentPort = (int) response["port"].n;
                 }
             });        
         });
@@ -139,27 +146,33 @@ public class MenuController : MonoBehaviour {
 
     public void GoToMainMenu()
     {
+        currentScreen = MenuScreens.Main;
         menuAnimator.SetBool("MainLoad", true);
     }
 
     public void GoToCharacterSelect() {
+        currentScreen = MenuScreens.Character;
         menuAnimator.SetBool("CharacterSelectLoad", true);
     }
 
     public void CharacterSelectToMain() {
+        currentScreen = MenuScreens.Main;
         menuAnimator.SetBool("CharacterSelectLoad", false);
     }
 
     public void GoToSettings() {
+        currentScreen = MenuScreens.Settings;
         menuAnimator.SetBool("SettingsLoad", true);
     }
 
-    public void ShowConnectionLoad(string message) {
+    public void ShowConnectionLoad(string message) { 
         mainThreadEvents.Enqueue(() => {
             GameObject connectionInfo = GameObject.FindGameObjectWithTag("ConnectionInfoMessage");
             if (!IsConnectionMessageShowing()) {
                 connectionInfo.GetComponent<Animator>().Play("MessagePopupAnimation", 0, 0f);
             }
+            connectionInfo.GetComponentInChildren<Image>().sprite = loadingSprite;
+            connectionInfo.GetComponentInChildren<LoadingSpinner>().rotating = true;
             connectionInfo.GetComponentInChildren<TextMeshProUGUI>().text = message;
         });
     }
@@ -169,6 +182,8 @@ public class MenuController : MonoBehaviour {
             GameObject connectionInfo = GameObject.FindGameObjectWithTag("ConnectionInfoMessage");
             connectionInfo.GetComponent<Animator>().Play("MessageAlertAnimation", 0, 0f);
             connectionInfo.GetComponentInChildren<TextMeshProUGUI>().text = message;
+            connectionInfo.GetComponentInChildren<Image>().sprite = successSprite;
+            connectionInfo.GetComponentInChildren<LoadingSpinner>().rotating = false;
             Invoke("DismissConnectionMessage", messageTTL);            
         });
     }
@@ -189,6 +204,8 @@ public class MenuController : MonoBehaviour {
                 connectionInfo.GetComponent<Animator>().Play("MessagePopupAnimation", 0, 0f);
             }
             connectionInfo.GetComponentInChildren<TextMeshProUGUI>().text = error;
+            connectionInfo.GetComponentInChildren<Image>().sprite = errorSprite;
+            connectionInfo.GetComponentInChildren<LoadingSpinner>().rotating = false;
             Invoke("DismissConnectionMessage", messageTTL);
         });
     }
@@ -207,12 +224,17 @@ public class MenuController : MonoBehaviour {
     }
 
     private void PreselectCharacter() {
-        GameObject.FindGameObjectsWithTag("CharacterSelectionContainer")[(int)currentSprite].GetComponentInChildren<Button>().Select();
+        GameObject.FindGameObjectsWithTag("CharacterSelectionContainer")[(int)currentCharacter].GetComponentInChildren<Button>().Select();
     }
 
     private void ChangeCharacter() {
-        GameObject.FindGameObjectWithTag("CharacterName").GetComponent<TextMeshProUGUI>().text = currentSprite.ToString();
-        GameObject.FindGameObjectWithTag("CharacterSelectPreview").GetComponent<Image>().sprite = characterSprites[(int)currentSprite];
+        GameObject.FindGameObjectWithTag("CharacterName").GetComponent<TextMeshProUGUI>().text = currentCharacter.ToString();
+        GameObject.FindGameObjectWithTag("CharacterSelectPreview").GetComponent<Image>().sprite = characterSprites[(int)currentCharacter];
+    }
+
+    public void CharacterSelected() {
+        // todo: play character select animation
+        currentMatch.selectedCharacter = currentCharacter;
     }
 
     public void SetupMainMenu() {
@@ -292,10 +314,6 @@ public class MenuController : MonoBehaviour {
         // todo: check for valid port
         networkController.port = port != "" ? Int32.Parse(port) : SNBGlobal.defaultServerPort;
     }
-
-    /*
-     * HELPERS
-     */
 
     private bool IsCurrentAnimationClip(Animator animator, string clipName) {
         return animator.GetCurrentAnimatorClipInfo(0).Length > 0 && 

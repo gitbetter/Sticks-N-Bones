@@ -1,6 +1,7 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.Networking;
 using System;
 using System.Net;
 using System.Net.Sockets;
@@ -42,12 +43,12 @@ public class SNBNetwork : MonoBehaviour {
     private string _serverAddress = "127.0.0.1";
     private int _port = 50777;
     private ManualResetEvent connectionTimeout = new ManualResetEvent(false);
+    private Socket sock = null;
 
     public int connectionRetries = 10;
-    public int maxBufferSize = 2048;
+    public int maxBufferSize = SNBGlobal.maxBufferSize;
 
     public static SNBNetwork instance = null;
-    private Socket sock = null;
 
     private void Awake() {
         if (SNBNetwork.instance == null) {
@@ -91,17 +92,17 @@ public class SNBNetwork : MonoBehaviour {
     public void GetRandomMatch(Action<JSONObject> callback) {
         if (sock.Connected) {
             OnLoad("Looking for opponent");
-            SendAndReceiveAsync(Encoding.UTF8.GetBytes("match:random"), callback);
+            SendAndReceiveAsync(Encoding.UTF8.GetBytes("match:random"), "Matched with opponent", callback);
         }
     }
 
     public void TerminateConnection(Action<JSONObject> callback) {
-        SendAndReceiveAsync(Encoding.UTF8.GetBytes("exit"), callback);
+        SendAndReceiveAsync(Encoding.UTF8.GetBytes("exit"), null, callback);
     }
 
-    private void SendAndReceiveAsync(Byte[] message, Action<JSONObject> callback) {
+    private void SendAndReceiveAsync(Byte[] data, string successMessage, Action<JSONObject> callback) {
         if (sock.Connected) {
-            sock.Send(message);
+            sock.Send(data);
 
             Byte[] receivedData = new Byte[maxBufferSize];
             SocketAsyncEventArgs asyncEventArgs = new SocketAsyncEventArgs();
@@ -109,9 +110,11 @@ public class SNBNetwork : MonoBehaviour {
             asyncEventArgs.Completed += (sender, e) => {
                 JSONObject response = new JSONObject(Encoding.UTF8.GetString(e.Buffer));
                 if (response.Count <= 0) {
-                    SendAndReceiveAsync(message, callback);
+                    SendAndReceiveAsync(data, successMessage, callback);
                 } else {
-                    OnLoadSuccess("Matched with opponent");
+                    if (successMessage != null) {
+                        OnLoadSuccess(successMessage);
+                    }
                     callback(response);
                 }
             };
