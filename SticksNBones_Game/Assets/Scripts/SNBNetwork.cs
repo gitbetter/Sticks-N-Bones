@@ -8,6 +8,13 @@ using System.Text;
 
 public class SNBNetwork : MonoBehaviour {
 
+    public delegate void Loading(string message);
+    public delegate void LoadingDone();
+    public delegate void Error(string error);
+
+    public event Loading OnLoad;
+    public event LoadingDone OnLoadDone;
+    public event Error onError;
 
     public string serverAddress {
         get { return _serverAddress; }
@@ -29,9 +36,8 @@ public class SNBNetwork : MonoBehaviour {
     private int _port = 50777;
     public int connectionRetries = 3;
     public int maxBufferSize = 1048;
-    
-    public static SNBNetwork instance = null;
 
+    public static SNBNetwork instance = null;
     private Socket sock = null;
 
     private void Awake() {
@@ -41,11 +47,11 @@ public class SNBNetwork : MonoBehaviour {
             Destroy(gameObject);
         }
         DontDestroyOnLoad(gameObject);
-        InitSocketConnection();
     }
 
-    private void InitSocketConnection() {        
+    public void InitSocketConnection() {        
         sock = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
+        OnLoad("Connecting to server");
         TrySocketConnection();
     }
 
@@ -54,7 +60,7 @@ public class SNBNetwork : MonoBehaviour {
     }
 
 
-    private void ResetSocketConnection() {
+    public void ResetSocketConnection() {
         if (sock != null && sock.Connected) {
             sock.Close();
         }
@@ -62,13 +68,17 @@ public class SNBNetwork : MonoBehaviour {
     }
 
     private void ConnectionCallback(IAsyncResult ar) {
-        if (!sock.Connected && connectionRetries > 0) {
-            --connectionRetries;
-            TrySocketConnection();
-        } else {
-            
-                // todo: could not connect to server error
-        }          
+        try {
+            sock.EndConnect(ar);
+            if (!sock.Connected && connectionRetries > 0) {
+                --connectionRetries;
+                TrySocketConnection();
+            } else {
+                OnLoadDone();
+            }
+        } catch (SocketException ex) {
+            onError("An error occurred while attempting to connect");
+        }     
     }
 
     public void GetRandomMatch(Action<Byte[]> callback) {

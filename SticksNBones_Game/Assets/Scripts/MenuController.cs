@@ -40,8 +40,15 @@ public class MenuController : MonoBehaviour {
     private void Start()
     {
         menuAnimator = GetComponent<Animator>();
+
         if (SNBNetwork.instance == null)
-            Instantiate(networkController);   
+            Instantiate(networkController);
+
+        networkController.OnLoad += ShowConnectionLoad;
+        networkController.OnLoadDone += DismissConnectionMessage;
+        networkController.onError += ShowConnectionError;
+
+        networkController.InitSocketConnection();
     }
 
     private void Update() {
@@ -82,7 +89,7 @@ public class MenuController : MonoBehaviour {
     public void PlayQuickMatch()
     {
         GoToCharacterSelect();
-        SNBNetwork.instance.GetRandomMatch((bytes) => {
+        networkController.GetRandomMatch((bytes) => {
             mainThreadEvents.Enqueue(() => {
                 JSONObject response = new JSONObject(Encoding.UTF8.GetString(bytes));
                 if (response.Count > 0) {
@@ -104,7 +111,7 @@ public class MenuController : MonoBehaviour {
 
     public void QuitGame()
     {
-        SNBNetwork.instance.TerminateConnection((bytes) => {
+        networkController.TerminateConnection((bytes) => {
             mainThreadEvents.Enqueue(() => {
                 Debug.Log("Quitting...");
                 Application.Quit();
@@ -145,6 +152,29 @@ public class MenuController : MonoBehaviour {
         menuAnimator.SetBool("SettingsLoad", true);
     }
 
+    public void ShowConnectionLoad(string message) {
+        mainThreadEvents.Enqueue(() => {
+            GameObject connectionInfo = GameObject.FindGameObjectWithTag("ConnectionInfoMessage");
+            connectionInfo.GetComponent<Animator>().SetBool("Show", true);
+            connectionInfo.GetComponentInChildren<TextMeshProUGUI>().text = message;
+        });
+    }
+
+    public void DismissConnectionMessage() {
+        mainThreadEvents.Enqueue(() => {
+            GameObject.FindGameObjectWithTag("ConnectionInfoMessage").GetComponent<Animator>().SetBool("Show", false);
+        });
+    }
+
+    public void ShowConnectionError(string error) {
+        mainThreadEvents.Enqueue(() => {
+            GameObject connectionInfo = GameObject.FindGameObjectWithTag("ConnectionInfoMessage");
+            connectionInfo.GetComponent<Animator>().SetBool("Show", true);
+            connectionInfo.GetComponentInChildren<TextMeshProUGUI>().text = error;
+            Invoke("DismissConnectionMessage", 5f);
+        });
+    }
+
     public void SettingsToMain() {
         menuAnimator.SetBool("SettingsLoad", false);
     }
@@ -155,6 +185,11 @@ public class MenuController : MonoBehaviour {
 
     private void PreselectCharacter() {
         GameObject.FindGameObjectsWithTag("CharacterSelectionContainer")[(int)currentSprite].GetComponentInChildren<Button>().Select();
+    }
+
+    private void ChangeCharacter() {
+        GameObject.FindGameObjectWithTag("CharacterName").GetComponent<TextMeshProUGUI>().text = currentSprite.ToString();
+        GameObject.FindGameObjectWithTag("CharacterSelectPreview").GetComponent<Image>().sprite = characterSprites[(int)currentSprite];
     }
 
     public void SetupMainMenu() {
@@ -203,11 +238,6 @@ public class MenuController : MonoBehaviour {
         resolutionsDropdown.AddOptions(resolutionOptions);
         resolutionsDropdown.value = currentResolutionIdx;
         resolutionsDropdown.RefreshShownValue();
-    }
-
-    private void ChangeCharacter() {
-        GameObject.FindGameObjectWithTag("CharacterName").GetComponent<TextMeshProUGUI>().text = currentSprite.ToString();
-        GameObject.FindGameObjectWithTag("CharacterSelectPreview").GetComponent<Image>().sprite = characterSprites[(int)currentSprite];
     }
 
     public void SetVolume(float volume) {
