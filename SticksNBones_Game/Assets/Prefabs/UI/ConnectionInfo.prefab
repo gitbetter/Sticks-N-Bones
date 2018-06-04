@@ -40,7 +40,7 @@ GameObject:
   - component: {fileID: 114494209404049908}
   - component: {fileID: 114462683178083728}
   m_Layer: 5
-  m_Name: Spinner
+  m_Name: LoaderImage
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0

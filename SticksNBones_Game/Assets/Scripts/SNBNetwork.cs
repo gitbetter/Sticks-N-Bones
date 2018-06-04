@@ -81,15 +81,16 @@ public class SNBNetwork : MonoBehaviour {
         }     
     }
 
-    public void GetRandomMatch(Action<Byte[]> callback) {
+    public void GetRandomMatch(Action<JSONObject> callback) {
+        OnLoad("Looking for opponent");
         SendAndReceiveAsync(Encoding.UTF8.GetBytes("match:random"), callback);
     }
 
-    public void TerminateConnection(Action<Byte[]> callback) {
+    public void TerminateConnection(Action<JSONObject> callback) {
         SendAndReceiveAsync(Encoding.UTF8.GetBytes("exit"), callback);
     }
 
-    private void SendAndReceiveAsync(Byte[] message, Action<Byte[]> callback) {
+    private void SendAndReceiveAsync(Byte[] message, Action<JSONObject> callback) {
         if (sock.Connected) {
             sock.Send(message);
 
@@ -97,12 +98,19 @@ public class SNBNetwork : MonoBehaviour {
             SocketAsyncEventArgs asyncEventArgs = new SocketAsyncEventArgs();
             asyncEventArgs.SetBuffer(receivedData, 0, maxBufferSize);
             asyncEventArgs.Completed += (sender, e) => {
-                callback(e.Buffer);
+                JSONObject response = new JSONObject(Encoding.UTF8.GetString(e.Buffer));
+                print(response);
+                if (response.Count <= 0) {
+                    SendAndReceiveAsync(message, callback);
+                } else {
+                    OnLoadDone();
+                    callback(response);
+                }
             };
 
             sock.ReceiveAsync(asyncEventArgs);
         } else {
-            callback(new Byte[] { });
+            callback(new JSONObject());
         }
     }
 }

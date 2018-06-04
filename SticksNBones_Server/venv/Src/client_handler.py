@@ -38,7 +38,6 @@ class ClientHandler:
            self.command_map[command](com_arg)
 
     def HandleMatchmaking(self, arg):
-        # todo: put in separate thread or make sure while loop is non-blocking somehow
         if (arg == "random"):
             opponent = None
             while opponent is None:

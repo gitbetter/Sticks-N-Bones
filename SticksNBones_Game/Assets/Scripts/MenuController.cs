@@ -27,6 +27,7 @@ public class MenuController : MonoBehaviour {
 
     [Header("Network")]
     [SerializeField] SNBNetwork networkController;
+    [SerializeField] float errorMessageTTL = 3.0f;
 
     private enum MenuScreens { None, First, Main, Settings };
     private enum CharacterType { Classico, Ranger };
@@ -37,10 +38,17 @@ public class MenuController : MonoBehaviour {
     Animator menuAnimator;
     Resolution[] resolutions;
 
-    private void Start()
-    {
+    private void Start() {
         menuAnimator = GetComponent<Animator>();
+    }
 
+    private void Update() {
+        NavigateMenu();
+        DispatchActions();
+        SelectedCharacterChanged();
+    }
+
+    private void InitializeNetwork() {
         if (SNBNetwork.instance == null)
             Instantiate(networkController);
 
@@ -49,12 +57,6 @@ public class MenuController : MonoBehaviour {
         networkController.onError += ShowConnectionError;
 
         networkController.InitSocketConnection();
-    }
-
-    private void Update() {
-        NavigateMenu();
-        DispatchActions();
-        SelectedCharacterChanged();
     }
 
     private void NavigateMenu() {
@@ -89,11 +91,10 @@ public class MenuController : MonoBehaviour {
     public void PlayQuickMatch()
     {
         GoToCharacterSelect();
-        networkController.GetRandomMatch((bytes) => {
+        networkController.GetRandomMatch((response) => {
             mainThreadEvents.Enqueue(() => {
-                JSONObject response = new JSONObject(Encoding.UTF8.GetString(bytes));
                 if (response.Count > 0) {
-                    // Todo: continue processing. Transition "Looking for opponent" component
+                    // Todo: continue processing. Transition from "Looking for opponent" message
                 }
             });        
         });
@@ -155,23 +156,26 @@ public class MenuController : MonoBehaviour {
     public void ShowConnectionLoad(string message) {
         mainThreadEvents.Enqueue(() => {
             GameObject connectionInfo = GameObject.FindGameObjectWithTag("ConnectionInfoMessage");
-            connectionInfo.GetComponent<Animator>().SetBool("Show", true);
+            connectionInfo.GetComponent<Animator>().Play("MessagePopupAnimation", -1, 0f);
+            //connectionInfo.GetComponent<Animator>().SetBool("Show", true);
             connectionInfo.GetComponentInChildren<TextMeshProUGUI>().text = message;
         });
     }
 
     public void DismissConnectionMessage() {
         mainThreadEvents.Enqueue(() => {
-            GameObject.FindGameObjectWithTag("ConnectionInfoMessage").GetComponent<Animator>().SetBool("Show", false);
+            GameObject.FindGameObjectWithTag("ConnectionInfoMessage").GetComponent<Animator>().Play("MessagePopdownAnimation", -1, 0f);
+            //GameObject.FindGameObjectWithTag("ConnectionInfoMessage").GetComponent<Animator>().SetBool("Show", false);
         });
     }
 
     public void ShowConnectionError(string error) {
         mainThreadEvents.Enqueue(() => {
             GameObject connectionInfo = GameObject.FindGameObjectWithTag("ConnectionInfoMessage");
-            connectionInfo.GetComponent<Animator>().SetBool("Show", true);
+            connectionInfo.GetComponent<Animator>().Play("MessagePopupAnimation", -1, 0f);
+            //connectionInfo.GetComponent<Animator>().SetBool("Show", true);
             connectionInfo.GetComponentInChildren<TextMeshProUGUI>().text = error;
-            Invoke("DismissConnectionMessage", 5f);
+            Invoke("DismissConnectionMessage", errorMessageTTL);
         });
     }
 
@@ -194,6 +198,7 @@ public class MenuController : MonoBehaviour {
 
     public void SetupMainMenu() {
         PreselectMenuOption();
+        InitializeNetwork();
     }
 
     private void PreselectMenuOption() {

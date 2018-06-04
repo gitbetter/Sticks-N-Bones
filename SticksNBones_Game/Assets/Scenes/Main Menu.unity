@@ -342,6 +342,7 @@ MonoBehaviour:
   resolutionsDropdown: {fileID: 1811232850}
   networkController: {fileID: 114028814537307488, guid: aa078d8cc7fdd3a4c92814bbef674e8f,
     type: 2}
+  errorMessageTTL: 3
 --- !u!95 &219635052
 Animator:
   serializedVersion: 3
