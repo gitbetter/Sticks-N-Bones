@@ -27,7 +27,7 @@ public class MenuController : MonoBehaviour {
 
     [Header("Network")]
     [SerializeField] SNBNetwork networkController;
-    [SerializeField] float errorMessageTTL = 3.0f;
+    [SerializeField] float messageTTL = 3.0f;
 
     private enum MenuScreens { None, First, Main, Settings };
     private enum CharacterType { Classico, Ranger };
@@ -54,6 +54,7 @@ public class MenuController : MonoBehaviour {
 
         networkController.OnLoad += ShowConnectionLoad;
         networkController.OnLoadDone += DismissConnectionMessage;
+        networkController.OnLoadSuccess += ShowConnectionSuccess;
         networkController.onError += ShowConnectionError;
 
         networkController.InitSocketConnection();
@@ -156,27 +157,45 @@ public class MenuController : MonoBehaviour {
     public void ShowConnectionLoad(string message) {
         mainThreadEvents.Enqueue(() => {
             GameObject connectionInfo = GameObject.FindGameObjectWithTag("ConnectionInfoMessage");
-            connectionInfo.GetComponent<Animator>().Play("MessagePopupAnimation", -1, 0f);
-            //connectionInfo.GetComponent<Animator>().SetBool("Show", true);
+            if (!IsConnectionMessageShowing()) {
+                connectionInfo.GetComponent<Animator>().Play("MessagePopupAnimation", 0, 0f);
+            }
             connectionInfo.GetComponentInChildren<TextMeshProUGUI>().text = message;
+        });
+    }
+
+    public void ShowConnectionSuccess(string message) {
+        mainThreadEvents.Enqueue(() => {
+            GameObject connectionInfo = GameObject.FindGameObjectWithTag("ConnectionInfoMessage");
+            connectionInfo.GetComponent<Animator>().Play("MessageAlertAnimation", 0, 0f);
+            connectionInfo.GetComponentInChildren<TextMeshProUGUI>().text = message;
+            Invoke("DismissConnectionMessage", messageTTL);            
         });
     }
 
     public void DismissConnectionMessage() {
         mainThreadEvents.Enqueue(() => {
-            GameObject.FindGameObjectWithTag("ConnectionInfoMessage").GetComponent<Animator>().Play("MessagePopdownAnimation", -1, 0f);
-            //GameObject.FindGameObjectWithTag("ConnectionInfoMessage").GetComponent<Animator>().SetBool("Show", false);
+            GameObject connectionInfo = GameObject.FindGameObjectWithTag("ConnectionInfoMessage");
+            if (!IsCurrentAnimationClip(connectionInfo.GetComponent<Animator>(), "MessagePopdownAnimation")) {
+                connectionInfo.GetComponent<Animator>().Play("MessagePopdownAnimation", 0, 0f);
+            }
         });
     }
 
     public void ShowConnectionError(string error) {
         mainThreadEvents.Enqueue(() => {
             GameObject connectionInfo = GameObject.FindGameObjectWithTag("ConnectionInfoMessage");
-            connectionInfo.GetComponent<Animator>().Play("MessagePopupAnimation", -1, 0f);
-            //connectionInfo.GetComponent<Animator>().SetBool("Show", true);
+            if(!IsConnectionMessageShowing()) {
+                connectionInfo.GetComponent<Animator>().Play("MessagePopupAnimation", 0, 0f);
+            }
             connectionInfo.GetComponentInChildren<TextMeshProUGUI>().text = error;
-            Invoke("DismissConnectionMessage", errorMessageTTL);
+            Invoke("DismissConnectionMessage", messageTTL);
         });
+    }
+
+    private bool IsConnectionMessageShowing() {
+        GameObject connectionInfo = GameObject.FindGameObjectWithTag("ConnectionInfoMessage");
+        return IsCurrentAnimationClip(connectionInfo.GetComponent<Animator>(), "MessagePopupAnimation");
     }
 
     public void SettingsToMain() {
@@ -198,7 +217,14 @@ public class MenuController : MonoBehaviour {
 
     public void SetupMainMenu() {
         PreselectMenuOption();
-        InitializeNetwork();
+
+        if (IsConnectionMessageShowing()) {
+            DismissConnectionMessage();
+        }
+
+        if (SNBNetwork.instance == null) {
+            InitializeNetwork();
+        }
     }
 
     private void PreselectMenuOption() {
@@ -259,15 +285,20 @@ public class MenuController : MonoBehaviour {
 
     public void SetNetworkIP(string ip) {
         // todo: check for valid ip   
-        if (ip != "") {
-            networkController.serverAddress = ip;
-        }
+        networkController.serverAddress = ip != "" ? ip : SNBGlobal.defaultServerIP;
     }
 
     public void SetNetworkPort(string port) {
         // todo: check for valid port
-        if (port != "") {
-            networkController.port = Int32.Parse(port);
-        }
+        networkController.port = port != "" ? Int32.Parse(port) : SNBGlobal.defaultServerPort;
+    }
+
+    /*
+     * HELPERS
+     */
+
+    private bool IsCurrentAnimationClip(Animator animator, string clipName) {
+        return animator.GetCurrentAnimatorClipInfo(0).Length > 0 && 
+                animator.GetCurrentAnimatorClipInfo(0)[0].clip.name == clipName;
     }
 }

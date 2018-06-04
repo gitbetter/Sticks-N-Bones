@@ -5,37 +5,46 @@ using System;
 using System.Net;
 using System.Net.Sockets;
 using System.Text;
+using System.Threading;
 
 public class SNBNetwork : MonoBehaviour {
 
     public delegate void Loading(string message);
     public delegate void LoadingDone();
+    public delegate void LoadingSuccess(string message);
     public delegate void Error(string error);
 
     public event Loading OnLoad;
     public event LoadingDone OnLoadDone;
+    public event LoadingSuccess OnLoadSuccess;
     public event Error onError;
 
     public string serverAddress {
         get { return _serverAddress; }
         set {
-            _serverAddress = value;
-            ResetSocketConnection();
+            if (_serverAddress != value) {
+                _serverAddress = value;
+                ResetSocketConnection();
+            }
         }
     }
 
     public int port {
         get { return _port;  }
         set {
-            _port = value;
-            ResetSocketConnection();
+            if (_port != value) {
+                _port = value;
+                ResetSocketConnection();
+            }
         }
     }
 
     private string _serverAddress = "127.0.0.1";
     private int _port = 50777;
-    public int connectionRetries = 3;
-    public int maxBufferSize = 1048;
+    private ManualResetEvent connectionTimeout = new ManualResetEvent(false);
+
+    public int connectionRetries = 10;
+    public int maxBufferSize = 2048;
 
     public static SNBNetwork instance = null;
     private Socket sock = null;
@@ -50,40 +59,40 @@ public class SNBNetwork : MonoBehaviour {
     }
 
     public void InitSocketConnection() {        
-        sock = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
         OnLoad("Connecting to server");
         TrySocketConnection();
     }
 
     private void TrySocketConnection() {
-        sock.BeginConnect(new[] { IPAddress.Parse(_serverAddress) }, _port, new AsyncCallback(ConnectionCallback), sock);
+        sock = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
+        sock.BeginConnect(IPAddress.Parse(_serverAddress), _port, new AsyncCallback(ConnectionCallback), sock);
     }
 
 
     public void ResetSocketConnection() {
-        if (sock != null && sock.Connected) {
-            sock.Close();
-        }
+        if (sock != null) sock.Close();
         TrySocketConnection();
     }
 
     private void ConnectionCallback(IAsyncResult ar) {
         try {
             sock.EndConnect(ar);
-            if (!sock.Connected && connectionRetries > 0) {
-                --connectionRetries;
-                TrySocketConnection();
-            } else {
-                OnLoadDone();
-            }
+            OnLoadSuccess("Connected to server!");
         } catch (SocketException ex) {
-            onError("An error occurred while attempting to connect");
-        }     
+            if (connectionRetries > 0) {
+                --connectionRetries;
+                ResetSocketConnection();
+            } else {
+                onError("An error occurred while attempting to connect");
+            }
+        }
     }
 
     public void GetRandomMatch(Action<JSONObject> callback) {
-        OnLoad("Looking for opponent");
-        SendAndReceiveAsync(Encoding.UTF8.GetBytes("match:random"), callback);
+        if (sock.Connected) {
+            OnLoad("Looking for opponent");
+            SendAndReceiveAsync(Encoding.UTF8.GetBytes("match:random"), callback);
+        }
     }
 
     public void TerminateConnection(Action<JSONObject> callback) {
@@ -99,11 +108,10 @@ public class SNBNetwork : MonoBehaviour {
             asyncEventArgs.SetBuffer(receivedData, 0, maxBufferSize);
             asyncEventArgs.Completed += (sender, e) => {
                 JSONObject response = new JSONObject(Encoding.UTF8.GetString(e.Buffer));
-                print(response);
                 if (response.Count <= 0) {
                     SendAndReceiveAsync(message, callback);
                 } else {
-                    OnLoadDone();
+                    OnLoadSuccess("Matched with opponent");
                     callback(response);
                 }
             };

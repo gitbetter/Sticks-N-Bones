@@ -51,7 +51,5 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: b1ff28ca564f38c46a8e7a9a5396619e, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  _serverAddress: 127.0.0.1
-  _port: 50777
-  connectionRetries: 3
-  maxBufferSize: 1048
+  connectionRetries: 10
+  maxBufferSize: 2048

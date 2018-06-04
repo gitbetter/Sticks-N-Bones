@@ -342,7 +342,7 @@ MonoBehaviour:
   resolutionsDropdown: {fileID: 1811232850}
   networkController: {fileID: 114028814537307488, guid: aa078d8cc7fdd3a4c92814bbef674e8f,
     type: 2}
-  errorMessageTTL: 3
+  messageTTL: 3
 --- !u!95 &219635052
 Animator:
   serializedVersion: 3
@@ -369,7 +369,8 @@ AudioSource:
   m_GameObject: {fileID: 219635046}
   m_Enabled: 1
   serializedVersion: 4
-  OutputAudioMixerGroup: {fileID: 0}
+  OutputAudioMixerGroup: {fileID: 24300002, guid: 2558f38691d63b54f99669406d656dd1,
+    type: 2}
   m_audioClip: {fileID: 0}
   m_PlayOnAwake: 1
   m_Volume: 1
@@ -2634,7 +2635,7 @@ MonoBehaviour:
   m_HandleRect: {fileID: 0}
   m_Direction: 0
   m_MinValue: -80
-  m_MaxValue: 0
+  m_MaxValue: 20
   m_WholeNumbers: 0
   m_Value: 0
   m_OnValueChanged:
