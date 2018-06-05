@@ -43,7 +43,7 @@ public class MenuController : MonoBehaviour {
     Animator menuAnimator;
     Resolution[] resolutions;
 
-    private void Start() {
+    private void Awake() {
         menuAnimator = GetComponent<Animator>();
     }
 
@@ -100,9 +100,13 @@ public class MenuController : MonoBehaviour {
         networkController.GetRandomMatch((response) => {
             mainThreadEvents.Enqueue(() => {
                 if (response.Count > 0) {
+                    string oppIp; int oppPort;
                     Instantiate(currentMatch);
-                    currentMatch.opponentIp = response["ip"].str;
-                    currentMatch.opponentPort = (int) response["port"].n;
+                    // todo: also receive 'is_server' field
+                    response.GetField(out oppIp, "ip", null);
+                    response.GetField(out oppPort, "port", -1);
+                    currentMatch.opponentIp = oppIp;
+                    currentMatch.opponentPort = oppPort;
                 }
             });        
         });

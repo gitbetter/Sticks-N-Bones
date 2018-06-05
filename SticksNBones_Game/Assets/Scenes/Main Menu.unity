@@ -340,13 +340,13 @@ MonoBehaviour:
   audioMixer: {fileID: 24100000, guid: 2558f38691d63b54f99669406d656dd1, type: 2}
   qualityDropdown: {fileID: 1858313769}
   resolutionsDropdown: {fileID: 1811232850}
-  networkController: {fileID: 114028814537307488, guid: aa078d8cc7fdd3a4c92814bbef674e8f,
+  networkController: {fileID: 114677614115200136, guid: aa078d8cc7fdd3a4c92814bbef674e8f,
     type: 2}
   messageTTL: 3
   successSprite: {fileID: 21300000, guid: 4f8182fdf229ddc40a7160cfc6deef6a, type: 3}
   errorSprite: {fileID: 21300000, guid: db5ebecd78be70a41b3ad65173373902, type: 3}
   loadingSprite: {fileID: 21300000, guid: 19ef6b5c17bc6314c8e777c5ed589c28, type: 3}
-  currentMatch: {fileID: 114885890443700136, guid: f92454bdcbc969e49878a9359c2423d3,
+  currentMatch: {fileID: 114720270630520056, guid: f92454bdcbc969e49878a9359c2423d3,
     type: 2}
 --- !u!95 &219635052
 Animator:

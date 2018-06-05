@@ -40,9 +40,8 @@ public class SNBNetwork : MonoBehaviour {
         }
     }
 
-    private string _serverAddress = "127.0.0.1";
-    private int _port = 50777;
-    private ManualResetEvent connectionTimeout = new ManualResetEvent(false);
+    private string _serverAddress = SNBGlobal.defaultServerIP;
+    private int _port = SNBGlobal.defaultServerPort;
     private Socket sock = null;
 
     public int connectionRetries = 10;
@@ -51,6 +50,7 @@ public class SNBNetwork : MonoBehaviour {
     public static SNBNetwork instance = null;
 
     private void Awake() {
+        ResetValues();
         if (SNBNetwork.instance == null) {
             SNBNetwork.instance = this;
         } else if (SNBNetwork.instance != this) {
@@ -123,5 +123,13 @@ public class SNBNetwork : MonoBehaviour {
         } else {
             callback(new JSONObject());
         }
+    }
+
+    private void ResetValues() {
+        _serverAddress = SNBGlobal.defaultServerIP;
+        _port = SNBGlobal.defaultServerPort;
+        sock = null;
+        connectionRetries = 20;
+        maxBufferSize = SNBGlobal.maxBufferSize;
     }
 }

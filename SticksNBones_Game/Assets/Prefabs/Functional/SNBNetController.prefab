@@ -19,7 +19,7 @@ GameObject:
   serializedVersion: 5
   m_Component:
   - component: {fileID: 4271862718558400}
-  - component: {fileID: 114028814537307488}
+  - component: {fileID: 114677614115200136}
   m_Layer: 0
   m_Name: SNBNetController
   m_TagString: Untagged
@@ -40,7 +40,7 @@ Transform:
   m_Father: {fileID: 0}
   m_RootOrder: 0
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!114 &114028814537307488
+--- !u!114 &114677614115200136
 MonoBehaviour:
   m_ObjectHideFlags: 1
   m_PrefabParentObject: {fileID: 0}
@@ -51,5 +51,5 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: b1ff28ca564f38c46a8e7a9a5396619e, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  connectionRetries: 4
+  connectionRetries: 20
   maxBufferSize: 2048

@@ -3,8 +3,10 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.Networking;
+using System.Text;
 
 public class MatchHandler : MonoBehaviour {
+
     public string opponentIp {
         get { return _opponentIp; }
         set {
@@ -28,7 +30,7 @@ public class MatchHandler : MonoBehaviour {
         set {
             if (value != _selectedCharacter) {
                 _selectedCharacter = value;
-                PlayerReady();
+                if (_selectedCharacter != CharacterType.None) PlayerReady();
             }
         }
     }
@@ -39,8 +41,12 @@ public class MatchHandler : MonoBehaviour {
     private int _opponentPort = -1;
     private CharacterType _selectedCharacter;
 
+    private enum ConnectionState { Disconnected, Connected };
+    ConnectionState status = ConnectionState.Disconnected;
+
     private void Awake() {
         DontDestroyOnLoad(gameObject);
+        ResetValues();
         InitializeHost();
     }
 
@@ -49,6 +55,8 @@ public class MatchHandler : MonoBehaviour {
     }
 
     private void InitializeHost() {
+        NetworkTransport.Shutdown();
+
         NetworkTransport.Init();
 
         ConnectionConfig config = new ConnectionConfig();
@@ -57,12 +65,14 @@ public class MatchHandler : MonoBehaviour {
 
         HostTopology topology = new HostTopology(config, 10);
 
-        hostId = NetworkTransport.AddHost(topology, 12345);
+        // Reminder: this overload chooses a random port
+        hostId = NetworkTransport.AddHost(topology);
     }
 
     private void TryPeerConnection() {
         byte error;
-        connectionId = NetworkTransport.Connect(hostId, opponentIp, opponentPort, 0, out error);
+        // todo: connect should only be done on one side, based on who acts as the 'server'
+        connectionId = NetworkTransport.Connect(hostId, _opponentIp, _opponentPort, 0, out error);
     }
 
     private void PollNetworkPeer() {
@@ -72,17 +82,68 @@ public class MatchHandler : MonoBehaviour {
         NetworkEventType evnt = NetworkTransport.Receive(out outHostId, out outConnectionId, out outChannelId, buffer, SNBGlobal.maxBufferSize, out receiveSize, out error);
         switch(evnt) {
             case NetworkEventType.ConnectEvent:
+                print("Peer Connected");
+                HandleConnectEvent(outHostId, outConnectionId, error);
                 break;
             case NetworkEventType.DataEvent:
+                print("Data Received");
+                HandleDataEvent(outHostId, outConnectionId, buffer, error);
                 break;
             case NetworkEventType.DisconnectEvent:
+                print("Disconnected");
+                HandleDisconnectEvent(outHostId, outConnectionId);
                 break;
             default:
+                print("Something else happened");
                 break;
+        }
+        print(evnt);
+    }
+
+    private void HandleConnectEvent(int outHostId, int outConnectionId, byte error) {
+        if (outHostId == hostId && outConnectionId == connectionId &&
+            (NetworkError)error == NetworkError.Ok) {
+            status = ConnectionState.Connected;
+        } else {
+            print("Error connecting to peer");
+            // todo: error connecting to peer
+        }
+    }
+
+    private void HandleDataEvent(int outHostId, int outConnectionId, byte[] data, byte error) {
+        if (outHostId == hostId && outConnectionId == connectionId &&
+            (NetworkError)error == NetworkError.Ok) {
+            print(data);
+        } else {
+            print("Error receiving data");
+            // todo: error receiving peer data
+        }
+    }
+
+    private void HandleDisconnectEvent(int outHostId, int outConnectionId) {
+        if (outHostId == hostId &&
+            outConnectionId == connectionId) {
+            status = ConnectionState.Disconnected;
         }
     }
 
     public void PlayerReady() {
+        if (status == ConnectionState.Connected) {
+            byte error;
+            byte[] message = Encoding.UTF8.GetBytes("matchup:ready");
+            NetworkTransport.Send(hostId, connectionId, channelId, message, message.Length, out error);
 
+            if ((NetworkError)error != NetworkError.Ok) {
+                print("Error sending message: " + message);
+            }
+        }
+    }
+
+    private void ResetValues() {
+        hostId = connectionId = channelId = 0;
+        _opponentIp = null;
+        _opponentPort = -1;
+        _selectedCharacter = CharacterType.None;
+        status = ConnectionState.Disconnected;
     }
 }

@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using UnityEngine;
 
-public enum CharacterType { Classico, Ranger };
+public enum CharacterType { None, Classico, Ranger };
 
 public static class SNBGlobal : object {
     public static string defaultServerIP = "127.0.0.1";
