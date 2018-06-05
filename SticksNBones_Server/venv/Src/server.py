@@ -94,6 +94,7 @@ class Server():
                 # Add each player to in_match list
                 self.AddToInMatch(player1)
                 self.AddToInMatch(player2)
+
         self.matchmaking_wait_cond.release()
 
     def ListPlayers(self):
@@ -107,27 +108,33 @@ class Server():
 
     def AddClient(self, client):
         with self.clients_list_lock:
-            self.online_clients.append(client)
+            if client not in self.online_clients:
+                self.online_clients.append(client)
 
     def RemoveClient(self, client):
         with self.clients_list_lock:
-            self.online_clients.remove(client)
+            if client in self.online_clients:
+                self.online_clients.remove(client)
 
     def AddToWaiting(self, client):
         with self.waiting_for_match_lock:
-            self.waiting_for_match.append(client)
+            if client not in self.waiting_for_match:
+                self.waiting_for_match.append(client)
 
     def RemoveFromWaiting(self, client):
         with self.waiting_for_match_lock:
-            self.waiting_for_match.remove(client)
+            if client in self.waiting_for_match:
+                self.waiting_for_match.remove(client)
 
     def AddToInMatch(self, client):
         with self.in_match_lock:
-            self.in_match.append(client)
+            if client not in self.in_match:
+                self.in_match.append(client)
 
     def RemoveFromInMatch(self, client):
         with self.in_match_lock:
-            self.in_match.remove(client)
+            if client in self.in_match:
+                self.in_match.remove(client)
 
     def CloseAllClients(self):
         while len(self.online_clients) > 0:
@@ -159,6 +166,7 @@ class Server():
 class ClientHandler:
     def __init__(self, sock, addr):
         # Networking
+        self.running = True
         self.sock = sock
         self.addr = addr
         # Threads
@@ -171,12 +179,12 @@ class ClientHandler:
     def HandleSocketConnection(self):
         print("\r|Sticks N' Bones| - %s:%s has jumped online" % self.addr)
         Server.main().AddClient(self)
-        while True:
+        while self.running:
             try:
                 new_message = self.sock.recv(1048).decode()
                 self.ProcessMessage(new_message)
             except OSError:
-                break
+                self.running = False
 
     def ProcessMessage(self, message):
         command, com_arg = message.split(":") if ":" in message else (message, None)
@@ -186,11 +194,11 @@ class ClientHandler:
     def HandleMatchmaking(self, arg):
         if (arg == "random"):
             Server.main().AddToWaiting(self)
-            while self not in Server.main().in_match: pass
-            #todo: signal match found or do nothing
 
     def CloseConnection(self, arg):
         print("\r|Sticks N' Bones| - %s:%s jumping offline" % self.addr)
+        Server.main().RemoveFromWaiting(self)
+        Server.main().RemoveFromInMatch(self)
         Server.main().RemoveClient(self)
         self.sock.close()
 

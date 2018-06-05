@@ -129,7 +129,9 @@ public class MenuController : MonoBehaviour {
 
     public void QuitGame()
     {
-        currentMatch.LeaveMatch();
+        if (currentMatch != null) {
+            currentMatch.LeaveMatch();
+        }
         networkController.TerminateConnection((response) => {
             Debug.Log("Quitting...");
             Application.Quit();
@@ -166,6 +168,10 @@ public class MenuController : MonoBehaviour {
     public void CharacterSelectToMain() {
         currentScreen = MenuScreens.Main;
         menuAnimator.SetBool("CharacterSelectLoad", false);
+        if (currentMatch != null) {
+            currentMatch.LeaveMatch();
+            currentMatch = null;
+        }
     }
 
     public void GoToSettings() {
@@ -175,6 +181,7 @@ public class MenuController : MonoBehaviour {
 
     public void ShowConnectionLoad(string message) { 
         mainThreadEvents.Enqueue(() => {
+            CancelInvoke("DismissConnectionMessage");
             GameObject connectionInfo = GameObject.FindGameObjectWithTag("ConnectionInfoMessage");
             if (!IsConnectionMessageShowing()) {
                 connectionInfo.GetComponent<Animator>().Play("MessagePopupAnimation", 0, 0f);
@@ -187,6 +194,7 @@ public class MenuController : MonoBehaviour {
 
     public void ShowConnectionSuccess(string message) {
         mainThreadEvents.Enqueue(() => {
+            CancelInvoke("DismissConnectionMessage");
             GameObject connectionInfo = GameObject.FindGameObjectWithTag("ConnectionInfoMessage");
             connectionInfo.GetComponent<Animator>().Play("MessageAlertAnimation", 0, 0f);
             connectionInfo.GetComponentInChildren<TextMeshProUGUI>().text = message;
@@ -207,6 +215,7 @@ public class MenuController : MonoBehaviour {
 
     public void ShowConnectionError(string error) {
         mainThreadEvents.Enqueue(() => {
+            CancelInvoke("DismissConnectionMessage");
             GameObject connectionInfo = GameObject.FindGameObjectWithTag("ConnectionInfoMessage");
             if(!IsConnectionMessageShowing()) {
                 connectionInfo.GetComponent<Animator>().Play("MessagePopupAnimation", 0, 0f);
