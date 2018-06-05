@@ -42,7 +42,9 @@ public class SNBNetwork : MonoBehaviour {
 
     private string _serverAddress = SNBGlobal.defaultServerIP;
     private int _port = SNBGlobal.defaultServerPort;
+    private Byte[] latestData = new Byte[SNBGlobal.maxBufferSize];
     private Socket sock = null;
+    private Dictionary<string, Queue<Action<JSONObject>>> callbackQueue = new Dictionary<string, Queue<Action<JSONObject>>>();
 
     public int connectionRetries = 10;
     public int maxBufferSize = SNBGlobal.maxBufferSize;
@@ -79,6 +81,7 @@ public class SNBNetwork : MonoBehaviour {
         try {
             sock.EndConnect(ar);
             OnLoadSuccess("Connected to server!");
+            sock.BeginReceive(latestData, 0, latestData.Length, SocketFlags.None, new AsyncCallback(ReceiveCallback), null);
         } catch (SocketException ex) {
             if (connectionRetries > 0) {
                 --connectionRetries;
@@ -89,47 +92,83 @@ public class SNBNetwork : MonoBehaviour {
         }
     }
 
+    private void ReceiveCallback(IAsyncResult AR) {
+        int received = sock.EndReceive(AR);
+        if (received <= 0) return;
+
+        byte[] data = new byte[received];
+        Buffer.BlockCopy(latestData, 0, data, 0, received);
+
+        JSONObject response = new JSONObject(Encoding.UTF8.GetString(data));
+        if (response.Count > 0) {
+            string responseRequest;
+            response.GetField(out responseRequest, "request", null);
+
+            switch(responseRequest) {
+                case "match:random":
+                    OnLoadSuccess("Found an opponent");
+                    CallAllCallbacks(responseRequest, response);
+                    break;
+                default:
+                    break;
+            }
+        }
+
+        sock.BeginReceive(latestData, 0, latestData.Length, SocketFlags.None, new AsyncCallback(ReceiveCallback), null);
+    }
+
     public void GetRandomMatch(Action<JSONObject> callback) {
         if (sock.Connected) {
             OnLoad("Looking for opponent");
-            SendAndReceiveAsync(Encoding.UTF8.GetBytes("match:random"), "Matched with opponent", callback);
+            SendRequest("match:random", callback);
         }
     }
 
     public void TerminateConnection(Action<JSONObject> callback) {
-        SendAndReceiveAsync(Encoding.UTF8.GetBytes("exit"), null, callback);
+        SendRequest("exit", callback);
     }
 
-    private void SendAndReceiveAsync(Byte[] data, string successMessage, Action<JSONObject> callback) {
+    private void SendRequest(string request, Action<JSONObject> callback) {
         if (sock.Connected) {
+            byte[] data = Encoding.UTF8.GetBytes(request);
             sock.Send(data);
-
-            Byte[] receivedData = new Byte[maxBufferSize];
-            SocketAsyncEventArgs asyncEventArgs = new SocketAsyncEventArgs();
-            asyncEventArgs.SetBuffer(receivedData, 0, maxBufferSize);
-            asyncEventArgs.Completed += (sender, e) => {
-                JSONObject response = new JSONObject(Encoding.UTF8.GetString(e.Buffer));
-                if (response.Count <= 0) {
-                    SendAndReceiveAsync(data, successMessage, callback);
-                } else {
-                    if (successMessage != null) {
-                        OnLoadSuccess(successMessage);
-                    }
-                    callback(response);
-                }
-            };
-
-            sock.ReceiveAsync(asyncEventArgs);
+            AddCallbackToQueue(request, callback);
         } else {
             callback(new JSONObject());
+        }
+    }
+
+    private void AddCallbackToQueue(string key, Action<JSONObject> callback) {
+        if (!callbackQueue.ContainsKey(key)) {
+            callbackQueue.Add(key, new Queue<Action<JSONObject>>());
+        }
+        callbackQueue[key].Enqueue(callback);
+    }
+
+    private List<Action<JSONObject>> TakeCallbacks(string key) {
+        List<Action<JSONObject>> callbacks = new List<Action<JSONObject>>();
+        if (callbackQueue.ContainsKey(key)) {
+            while (callbackQueue[key].Count > 0) {
+                callbacks.Add(callbackQueue[key].Dequeue());
+            }
+        }
+        return callbacks;
+    }
+
+    private void CallAllCallbacks(string key, JSONObject response) {
+        List<Action<JSONObject>> userCallbacks = TakeCallbacks(key);
+        foreach (Action<JSONObject> cb in userCallbacks) {
+            cb(response);
         }
     }
 
     private void ResetValues() {
         _serverAddress = SNBGlobal.defaultServerIP;
         _port = SNBGlobal.defaultServerPort;
-        sock = null;
         connectionRetries = 20;
         maxBufferSize = SNBGlobal.maxBufferSize;
+        sock = null;
+        latestData = new byte[SNBGlobal.maxBufferSize];
+        callbackQueue = new Dictionary<string, Queue<Action<JSONObject>>>();
     }
 }

@@ -4,6 +4,7 @@ import sys
 import random
 import json
 
+from time import sleep
 from command_line import *
 
 #
@@ -27,12 +28,15 @@ class Server():
         # Threads
         self.network_thread = threading.Thread(group=None, target=self.StartServerNetworking, kwargs={})
         self.interactive_thread = threading.Thread(group=None, target=self.StartServerInteractive, kwargs={})
+        self.matchmaking_thread = threading.Thread(group=None, target=self.StartMatchmakingHandler, kwargs={})
         # Data Structures
         self.online_clients = []
         self.waiting_for_match = []
         self.in_match = []
         # Synchronization
         self.clients_list_lock = threading.Lock()
+        self.waiting_for_match_lock = threading.Lock()
+        self.in_match_lock = threading.Lock()
         # Misc.
         self.command_map = {'players': self.ListPlayers}
 
@@ -63,6 +67,32 @@ class Server():
 
         self.Shutdown()
 
+    def StartMatchmakingHandler(self):
+        while self.running:
+            sleep(5)
+            while len(self.waiting_for_match) >= 2:
+                # Pick two players for matchup at randomg
+                player1, player2 = random.sample(self.waiting_for_match, 2)
+
+                # Players have been picked for matchup, so remove them from waiting queue
+                self.RemoveFromWaiting(player1)
+                self.RemoveFromWaiting(player2)
+
+                # Assign one of two players as the server, and send the each player the opponents address info
+                server = random.choice([player1, player2])
+                player1.sock.send(json.dumps({'request': 'match:random',
+                                              'ip': player2.addr[0],
+                                              'port': player2.addr[1],
+                                              'is_hosting': server == player1}).encode() if opponent else '{}'.encode())
+                player2.sock.send(json.dumps({'request': 'match:random',
+                                              'ip': player1.addr[0],
+                                              'port': player1.addr[1],
+                                              'is_hosting': server == player2}).encode() if player1 else '{}'.encode())
+
+                # Add each player to in_match list
+                self.AddToInMatch(player1)
+                self.AddToInMatch(player2)
+
     def ListPlayers(self):
         print("\n-------------- Online Players ---------------\n")
         if len(self.online_clients) == 0:
@@ -70,7 +100,7 @@ class Server():
         else:
             for c in self.online_clients:
                 print("\t- %s:%d\n" % c.addr)
-        print("---------------------------------------------")
+        print("---------------------------------------------\n")
 
     def AddClient(self, client):
         with self.clients_list_lock:
@@ -80,16 +110,37 @@ class Server():
         with self.clients_list_lock:
             self.online_clients.remove(client)
 
+    def AddToWaiting(self, client):
+        with self.waiting_for_match_lock:
+            self.waiting_for_match.append(client)
+
+    def RemoveFromWaiting(self, client):
+        with self.waiting_for_match_lock:
+            self.waiting_for_match.remove(client)
+
+    def AddToInMatch(self, client):
+        with self.in_match_lock:
+            self.in_match.append(client)
+
+    def RemoveFromInMatch(self, client):
+        with self.in_match_lock:
+            self.in_match.remove(client)
+
+    def CloseAllClients(self):
+        while len(self.online_clients) > 0:
+            self.online_clients[0].CloseConnection(None)
+
+
     def Start(self, port=50777, interface=''):
         self.port = int(port)
         self.interface = interface
         self.running = True
         self.network_thread.start()
         self.interactive_thread.start()
+        self.matchmaking_thread.start()
 
     def Shutdown(self):
-        for client in self.online_clients:
-            client.CloseConnection(None)
+        self.CloseAllClients()
         self.sock.close()
         sys.exit(0)
 
@@ -127,14 +178,10 @@ class ClientHandler:
            self.command_map[command](com_arg)
 
     def HandleMatchmaking(self, arg):
-        # todo: should pull opponent from a waiting_for_match list and
-        # notify opponent atomically that match has been made
         if (arg == "random"):
-            opponent = None
-            while opponent is None:
-                choices = [x for x in Server.main().online_clients if x != self]
-                opponent = random.choice(choices) if len(choices) > 0 else None
-            self.sock.send(json.dumps({'ip': opponent.addr[0], 'port': opponent.addr[1]}).encode() if opponent else '{}'.encode())
+            Server.main().AddToWaiting(self)
+            while self not in Server.main().in_match: pass
+            #todo: signal match found or do nothing
 
     def CloseConnection(self, arg):
         print("\r|Sticks N' Bones| - %s:%s jumping offline" % self.addr)

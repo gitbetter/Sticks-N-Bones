@@ -101,12 +101,16 @@ public class MenuController : MonoBehaviour {
             mainThreadEvents.Enqueue(() => {
                 if (response.Count > 0) {
                     string oppIp; int oppPort;
+                    bool is_hosting;
+
                     Instantiate(currentMatch);
-                    // todo: also receive 'is_server' field
                     response.GetField(out oppIp, "ip", null);
                     response.GetField(out oppPort, "port", -1);
+                    response.GetField(out is_hosting, "is_hosting", false);
+
                     currentMatch.opponentIp = oppIp;
                     currentMatch.opponentPort = oppPort;
+                    currentMatch.isServer = is_hosting;
                 }
             });        
         });

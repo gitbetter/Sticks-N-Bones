@@ -34,6 +34,7 @@ public class MatchHandler : MonoBehaviour {
             }
         }
     }
+    public bool isServer = false;
 
     private int hostId, connectionId;
     private byte channelId;
@@ -71,8 +72,10 @@ public class MatchHandler : MonoBehaviour {
 
     private void TryPeerConnection() {
         byte error;
-        // todo: connect should only be done on one side, based on who acts as the 'server'
-        connectionId = NetworkTransport.Connect(hostId, _opponentIp, _opponentPort, 0, out error);
+        
+        if (!isServer) {
+            connectionId = NetworkTransport.Connect(hostId, _opponentIp, _opponentPort, 0, out error);
+        }
     }
 
     private void PollNetworkPeer() {
@@ -141,6 +144,7 @@ public class MatchHandler : MonoBehaviour {
 
     private void ResetValues() {
         hostId = connectionId = channelId = 0;
+        isServer = false;
         _opponentIp = null;
         _opponentPort = -1;
         _selectedCharacter = CharacterType.None;
