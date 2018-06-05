@@ -132,7 +132,12 @@ public class SNBNetwork : MonoBehaviour {
         if (sock.Connected) {
             byte[] data = Encoding.UTF8.GetBytes(request);
             sock.Send(data);
-            AddCallbackToQueue(request, callback);
+            if (request == "exit") {
+                sock.Close();
+                callback(new JSONObject());
+            } else {
+                AddCallbackToQueue(request, callback);
+            }
         } else {
             callback(new JSONObject());
         }

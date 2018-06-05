@@ -12,7 +12,7 @@ public class MatchHandler : MonoBehaviour {
         set {
             _opponentIp = value;
             if (_opponentPort != -1) {
-                TryPeerConnection();
+                SetupMatchConnection();
             }
         }
     }
@@ -21,7 +21,7 @@ public class MatchHandler : MonoBehaviour {
         set {
             _opponentPort = value;
             if (_opponentIp != null) {
-                TryPeerConnection();
+                SetupMatchConnection();
             }
         }
     }
@@ -34,25 +34,29 @@ public class MatchHandler : MonoBehaviour {
             }
         }
     }
-    public bool isServer = false;
+    [HideInInspector] public bool isServer = false;
 
-    private int hostId, connectionId;
-    private byte channelId;
+    private int hostId = 0, connectionId = 0;
+    private byte channelId = 0;
     private string _opponentIp = null;
     private int _opponentPort = -1;
-    private CharacterType _selectedCharacter;
+    private CharacterType _selectedCharacter = CharacterType.None;
 
     private enum ConnectionState { Disconnected, Connected };
-    ConnectionState status = ConnectionState.Disconnected;
+    private ConnectionState status = ConnectionState.Disconnected;
 
     private void Awake() {
-        DontDestroyOnLoad(gameObject);
         ResetValues();
-        InitializeHost();
+        DontDestroyOnLoad(gameObject);
     }
 
     private void Update() {
         PollNetworkPeer();
+    }
+
+    private void SetupMatchConnection() {
+        InitializeHost();
+        ConnectToPeer();
     }
 
     private void InitializeHost() {
@@ -66,15 +70,16 @@ public class MatchHandler : MonoBehaviour {
 
         HostTopology topology = new HostTopology(config, 10);
 
-        // Reminder: this overload chooses a random port
-        hostId = NetworkTransport.AddHost(topology);
+        hostId = isServer ? NetworkTransport.AddHost(topology, SNBGlobal.defaultMatchPort) : NetworkTransport.AddHost(topology);
     }
 
-    private void TryPeerConnection() {
+    private void ConnectToPeer() {
         byte error;
-        
         if (!isServer) {
-            connectionId = NetworkTransport.Connect(hostId, _opponentIp, _opponentPort, 0, out error);
+            connectionId = NetworkTransport.Connect(hostId, _opponentIp, SNBGlobal.defaultMatchPort, 0, out error);
+            if ((NetworkError)error != NetworkError.Ok) {
+                print("Error connecting to peer: error");
+            }
         }
     }
 
@@ -96,17 +101,19 @@ public class MatchHandler : MonoBehaviour {
                 print("Disconnected");
                 HandleDisconnectEvent(outHostId, outConnectionId);
                 break;
+            case NetworkEventType.Nothing:
+                print("Nothing happened");
+                break;
             default:
-                print("Something else happened");
                 break;
         }
         print(evnt);
     }
 
     private void HandleConnectEvent(int outHostId, int outConnectionId, byte error) {
-        if (outHostId == hostId && outConnectionId == connectionId &&
-            (NetworkError)error == NetworkError.Ok) {
+        if ((NetworkError)error == NetworkError.Ok) {
             status = ConnectionState.Connected;
+            if (connectionId == 0) connectionId = outConnectionId;
         } else {
             print("Error connecting to peer");
             // todo: error connecting to peer
@@ -114,8 +121,7 @@ public class MatchHandler : MonoBehaviour {
     }
 
     private void HandleDataEvent(int outHostId, int outConnectionId, byte[] data, byte error) {
-        if (outHostId == hostId && outConnectionId == connectionId &&
-            (NetworkError)error == NetworkError.Ok) {
+        if ((NetworkError)error == NetworkError.Ok) {
             print(data);
         } else {
             print("Error receiving data");
@@ -138,6 +144,17 @@ public class MatchHandler : MonoBehaviour {
 
             if ((NetworkError)error != NetworkError.Ok) {
                 print("Error sending message: " + message);
+            }
+        }
+    }
+
+    public void LeaveMatch() {
+        if (status == ConnectionState.Connected) {
+            byte error;
+            NetworkTransport.Disconnect(hostId, connectionId, out error);
+
+            if ((NetworkError)error != NetworkError.Ok) {
+                print("Error disconnecting from peer. Will disconnect by timeout.");
             }
         }
     }

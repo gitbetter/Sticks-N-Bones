@@ -33,7 +33,7 @@ public class MenuController : MonoBehaviour {
     [SerializeField] Sprite loadingSprite;
 
     [Header("Matchmaking")]
-    [SerializeField] MatchHandler currentMatch;
+    [SerializeField] MatchHandler matchHandler;
 
     private enum MenuScreens { None, First, Main, Settings, Character };
 
@@ -42,6 +42,7 @@ public class MenuController : MonoBehaviour {
     CharacterType currentCharacter = CharacterType.Classico;
     Animator menuAnimator;
     Resolution[] resolutions;
+    MatchHandler currentMatch;
 
     private void Awake() {
         menuAnimator = GetComponent<Animator>();
@@ -103,14 +104,14 @@ public class MenuController : MonoBehaviour {
                     string oppIp; int oppPort;
                     bool is_hosting;
 
-                    Instantiate(currentMatch);
+                    currentMatch = Instantiate(matchHandler);
                     response.GetField(out oppIp, "ip", null);
                     response.GetField(out oppPort, "port", -1);
                     response.GetField(out is_hosting, "is_hosting", false);
 
+                    currentMatch.isServer = is_hosting;
                     currentMatch.opponentIp = oppIp;
                     currentMatch.opponentPort = oppPort;
-                    currentMatch.isServer = is_hosting;
                 }
             });        
         });
@@ -128,11 +129,10 @@ public class MenuController : MonoBehaviour {
 
     public void QuitGame()
     {
-        networkController.TerminateConnection((bytes) => {
-            mainThreadEvents.Enqueue(() => {
-                Debug.Log("Quitting...");
-                Application.Quit();
-            });
+        currentMatch.LeaveMatch();
+        networkController.TerminateConnection((response) => {
+            Debug.Log("Quitting...");
+            Application.Quit();
         });
     }
 

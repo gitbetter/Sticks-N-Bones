@@ -37,6 +37,7 @@ class Server():
         self.clients_list_lock = threading.Lock()
         self.waiting_for_match_lock = threading.Lock()
         self.in_match_lock = threading.Lock()
+        self.matchmaking_wait_cond = threading.Condition()
         # Misc.
         self.command_map = {'players': self.ListPlayers}
 
@@ -68,8 +69,9 @@ class Server():
         self.Shutdown()
 
     def StartMatchmakingHandler(self):
+        self.matchmaking_wait_cond.acquire()
         while self.running:
-            sleep(5)
+            self.matchmaking_wait_cond.wait(5)
             while len(self.waiting_for_match) >= 2:
                 # Pick two players for matchup at randomg
                 player1, player2 = random.sample(self.waiting_for_match, 2)
@@ -83,7 +85,7 @@ class Server():
                 player1.sock.send(json.dumps({'request': 'match:random',
                                               'ip': player2.addr[0],
                                               'port': player2.addr[1],
-                                              'is_hosting': server == player1}).encode() if opponent else '{}'.encode())
+                                              'is_hosting': server == player1}).encode() if player2 else '{}'.encode())
                 player2.sock.send(json.dumps({'request': 'match:random',
                                               'ip': player1.addr[0],
                                               'port': player1.addr[1],
@@ -92,6 +94,7 @@ class Server():
                 # Add each player to in_match list
                 self.AddToInMatch(player1)
                 self.AddToInMatch(player2)
+        self.matchmaking_wait_cond.release()
 
     def ListPlayers(self):
         print("\n-------------- Online Players ---------------\n")
@@ -142,6 +145,9 @@ class Server():
     def Shutdown(self):
         self.CloseAllClients()
         self.sock.close()
+        self.matchmaking_wait_cond.acquire()
+        self.matchmaking_wait_cond.notify()
+        self.matchmaking_wait_cond.release()
         sys.exit(0)
 
 #
