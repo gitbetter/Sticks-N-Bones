@@ -15,6 +15,9 @@ public class MenuController : MonoBehaviour {
     [SerializeField] TextMeshProUGUI pressToStartText;
     [SerializeField] AudioClip logoCrashAudio;
     [SerializeField] AudioClip mainMenuMusic;
+    [SerializeField] AudioClip buttonHighlightAudio;
+    [SerializeField] AudioClip buttonSelectAudio;
+    [SerializeField] AudioClip characterSelectAudio;
     [SerializeField] float menuMusicVolume = 0.5f;
 
     [Header("Character Select")]
@@ -40,18 +43,21 @@ public class MenuController : MonoBehaviour {
     MenuScreens currentScreen = MenuScreens.None;
     Queue<Action> mainThreadEvents = new Queue<Action>();
     CharacterType currentCharacter = CharacterType.Classico;
-    Animator menuAnimator;
     Resolution[] resolutions;
     MatchHandler currentMatch;
 
+    Animator menuAnimator;
+    AudioSource buttonSFXSource;
+
     private void Awake() {
         menuAnimator = GetComponent<Animator>();
+        buttonSFXSource = NewAudioSource(false, false, 0.75f);
     }
 
     private void Update() {
-        NavigateMenu();
+        NavigateIntroMenu();
         DispatchActions();
-        SelectedCharacterChanged();
+        UpdateHighlightedCharacter();
     }
 
     private void InitializeNetwork() {
@@ -66,7 +72,15 @@ public class MenuController : MonoBehaviour {
         networkController.InitSocketConnection();
     }
 
-    private void NavigateMenu() {
+    private AudioSource NewAudioSource(bool loops, bool playsOnAwake, float volume) {
+        AudioSource audioSource = gameObject.AddComponent<AudioSource>();
+        audioSource.loop = loops;
+        audioSource.playOnAwake = playsOnAwake;
+        audioSource.volume = volume;
+        return audioSource;
+    }
+
+    private void NavigateIntroMenu() {
         if (Input.anyKeyDown && currentScreen == MenuScreens.First) {
             GoToMainMenu();
         }
@@ -79,7 +93,7 @@ public class MenuController : MonoBehaviour {
         }
     }
 
-    private void SelectedCharacterChanged() {
+    private void UpdateHighlightedCharacter() {
         GameObject[] selectionContainers = GameObject.FindGameObjectsWithTag("CharacterSelectionContainer");
         for (int i = 0; i < selectionContainers.Length; i++) {
             GameObject cont = selectionContainers[i];
@@ -250,8 +264,24 @@ public class MenuController : MonoBehaviour {
     }
 
     public void CharacterSelected() {
-        // todo: play character select animation
-        currentMatch.selectedCharacter = currentCharacter;
+        menuAnimator.Play("CharacterSelectedAnimation", 0, 0f);
+        PlayCharacterSelectAudio();
+
+        if (currentMatch != null) {
+            currentMatch.selectedCharacter = currentCharacter;
+        }
+
+        GameObject[] selectionContainers = GameObject.FindGameObjectsWithTag("CharacterSelectionContainer");
+        for (int i = 0; i < selectionContainers.Length; i++) {
+            GameObject cont = selectionContainers[i];
+            if (cont.GetComponentInChildren<Button>().gameObject == EventSystem.current.currentSelectedGameObject) {                
+                if ((int)currentCharacter != i) {
+                    // todo: do something nice
+                }
+            } else {
+                // todo: undo the niceness
+            }
+        }
     }
 
     public void SetupMainMenu() {
@@ -335,5 +365,17 @@ public class MenuController : MonoBehaviour {
     private bool IsCurrentAnimationClip(Animator animator, string clipName) {
         return animator.GetCurrentAnimatorClipInfo(0).Length > 0 && 
                 animator.GetCurrentAnimatorClipInfo(0)[0].clip.name == clipName;
+    }
+
+    public void PlayButtonHighlightAudio() {
+        buttonSFXSource.PlayOneShot(buttonHighlightAudio);
+    }
+
+    public void PlayButtonSelectedAudio() {
+        buttonSFXSource.PlayOneShot(buttonSelectAudio);
+    }
+
+    public void PlayCharacterSelectAudio() {
+        buttonSFXSource.PlayOneShot(characterSelectAudio);
     }
 }
