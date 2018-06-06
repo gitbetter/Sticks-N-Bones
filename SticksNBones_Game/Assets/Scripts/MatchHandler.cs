@@ -122,7 +122,7 @@ public class MatchHandler : MonoBehaviour {
 
     private void HandleDataEvent(int outHostId, int outConnectionId, byte[] data, byte error) {
         if ((NetworkError)error == NetworkError.Ok) {
-            print(data);
+            JSONObject dataObj = new JSONObject(Encoding.UTF8.GetString(data));
         } else {
             print("Error receiving data");
             // todo: error receiving peer data

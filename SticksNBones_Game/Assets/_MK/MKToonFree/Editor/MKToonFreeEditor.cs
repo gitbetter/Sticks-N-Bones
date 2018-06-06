@@ -128,7 +128,7 @@ namespace MK.Toon
         {
             EditorGUI.showMixedValue = prop.hasMixedValue;
             EditorGUI.BeginChangeCheck();
-            Color c = EditorGUILayout.ColorField(label, prop.colorValue, false, showAlpha, hdrEnabled, colorPickerHDRConfig);
+            Color c = EditorGUILayout.ColorField(label, prop.colorValue, false, showAlpha, hdrEnabled);
             EditorGUI.showMixedValue = false;
             if (EditorGUI.EndChangeCheck())
                 prop.colorValue = c;

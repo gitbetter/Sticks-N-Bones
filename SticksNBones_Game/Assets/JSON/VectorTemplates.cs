@@ -146,6 +146,9 @@ public static partial class JSONTemplates {
 		LayerMask l = new LayerMask {value = (int)obj["value"].n};
 		return l;
 	}
+    /*
+     * Rect
+     */
 	public static JSONObject FromRect(Rect r) {
 		JSONObject result = JSONObject.obj;
 		if(r.x != 0)		result.AddField("x", r.x);
@@ -186,7 +189,9 @@ public static partial class JSONTemplates {
 		}
 		return r;
 	}
-	
+	/*
+     * AnimationCurve
+     */
 	public static AnimationCurve ToAnimationCurve(JSONObject obj){
 		AnimationCurve a = new AnimationCurve();
 		if(obj.HasField("keys")){
@@ -215,12 +220,14 @@ public static partial class JSONTemplates {
 		}
 		return result;
 	}
-	
+	/*
+     * Keyframe
+     */
 	public static Keyframe ToKeyframe(JSONObject obj){
 		Keyframe k = new Keyframe(obj.HasField("time")? obj.GetField("time").n : 0, obj.HasField("value")? obj.GetField("value").n : 0);
 		if(obj.HasField("inTangent")) k.inTangent = obj.GetField("inTangent").n;
 		if(obj.HasField("outTangent")) k.outTangent = obj.GetField("outTangent").n;
-		if(obj.HasField("tangentMode")) k.tangentMode = (int)obj.GetField("tangentMode").n;
+		//if(obj.HasField("tangentMode")) k.tangentMode = (int)obj.GetField("tangentMode").n;
 		
 		return k;
 	}
@@ -228,7 +235,7 @@ public static partial class JSONTemplates {
 		JSONObject result = JSONObject.obj;
 		if(k.inTangent != 0)	result.AddField("inTangent", k.inTangent);
 		if(k.outTangent != 0)	result.AddField("outTangent", k.outTangent);
-		if(k.tangentMode != 0)	result.AddField("tangentMode", k.tangentMode);
+		//if(k.tangentMode != 0)	result.AddField("tangentMode", k.tangentMode);
 		if(k.time != 0)	result.AddField("time", k.time);
 		if(k.value != 0)	result.AddField("value", k.value);
 		return result;

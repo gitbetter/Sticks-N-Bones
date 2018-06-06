@@ -332,7 +332,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   pressToStartText: {fileID: 1688379150}
   logoCrashAudio: {fileID: 8300000, guid: c2f82b6841bc6f048876eda01c2a2967, type: 3}
-  mainMenuMusic: {fileID: 8300000, guid: 0bfbe0850aac849469f0bc8881473755, type: 3}
+  mainMenuMusic: {fileID: 8300000, guid: 7d2579b6b5d7ef24ab9e27b9b426c305, type: 3}
   menuMusicVolume: 0.3
   characterSprites:
   - {fileID: 21300000, guid: 7008da7adadf6ad4a90d8f4e9857b194, type: 3}
