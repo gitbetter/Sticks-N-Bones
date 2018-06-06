@@ -39,10 +39,11 @@ public class MenuController : MonoBehaviour {
     [SerializeField] MatchHandler matchHandler;
 
     private enum MenuScreens { None, First, Main, Settings, Character };
+    private enum ConnectionMessageState { Loading, Success, Error };
 
     MenuScreens currentScreen = MenuScreens.None;
     Queue<Action> mainThreadEvents = new Queue<Action>();
-    CharacterType currentCharacter = CharacterType.Classico;
+    CharacterType highlightedCharacter = CharacterType.Classico;
     Resolution[] resolutions;
     MatchHandler currentMatch;
 
@@ -80,12 +81,6 @@ public class MenuController : MonoBehaviour {
         return audioSource;
     }
 
-    private void NavigateIntroMenu() {
-        if (Input.anyKeyDown && currentScreen == MenuScreens.First) {
-            GoToMainMenu();
-        }
-    }
-
     private void DispatchActions() {
         while (mainThreadEvents.Count > 0) {
             Action action = mainThreadEvents.Dequeue();
@@ -93,195 +88,26 @@ public class MenuController : MonoBehaviour {
         }
     }
 
-    private void UpdateHighlightedCharacter() {
-        GameObject[] selectionContainers = GameObject.FindGameObjectsWithTag("CharacterSelectionContainer");
-        for (int i = 0; i < selectionContainers.Length; i++) {
-            GameObject cont = selectionContainers[i];
-            if (cont.GetComponentInChildren<Button>().gameObject == EventSystem.current.currentSelectedGameObject) {
-                cont.GetComponent<Image>().color = new Color(1f, 0.9896f, 0);
-                if ((int)currentCharacter != i) {
-                    currentCharacter = (CharacterType)i;
-                    menuAnimator.Play("CharacterSelectionChangedAnimation", -1, 0f);
-                }
-            } else {
-                cont.GetComponent<Image>().color = new Color(1f, 1f, 1f);
-            }
+    /*             Startup               */
+    /* ================================ */
+
+    private void NavigateIntroMenu() {
+        if (Input.anyKeyDown && currentScreen == MenuScreens.First) {
+            GoToMainMenu();
         }
     }
 
-    public void PlayQuickMatch()
-    {
-        GoToCharacterSelect();
-        networkController.GetRandomMatch((response) => {
-            mainThreadEvents.Enqueue(() => {
-                if (response.Count > 0) {
-                    string oppIp; int oppPort;
-                    bool is_hosting;
-
-                    currentMatch = Instantiate(matchHandler);
-                    response.GetField(out oppIp, "ip", null);
-                    response.GetField(out oppPort, "port", -1);
-                    response.GetField(out is_hosting, "is_hosting", false);
-
-                    currentMatch.isServer = is_hosting;
-                    currentMatch.opponentIp = oppIp;
-                    currentMatch.opponentPort = oppPort;
-                }
-            });        
-        });
-    }
-
-    public void ShowLeaderboards()
-    {
-        // todo
-    }
-
-    public void ShowSettings()
-    {
-        GoToSettings();
-    }
-
-    public void QuitGame()
-    {
-        if (currentMatch != null) {
-            currentMatch.LeaveMatch();
-        }
-        networkController.TerminateConnection((response) => {
-            Debug.Log("Quitting...");
-            Application.Quit();
-        });
-    }
-
-    public void PlayLogoCrash()
-    {
-        GetComponent<AudioSource>().PlayOneShot(logoCrashAudio);
-    }
-
-    public void PlayMenuMusic()
-    {
-        GetComponent<AudioSource>().PlayOneShot(mainMenuMusic, menuMusicVolume);
-    }
-
-    public void LoadStart()
-    {
+    public void LoadStart() {
         currentScreen = MenuScreens.First;
         menuAnimator.SetBool("FirstLoad", true);
     }
 
-    public void GoToMainMenu()
-    {
+    /*             Main Menu            */
+    /* ================================ */
+
+    public void GoToMainMenu() {
         currentScreen = MenuScreens.Main;
         menuAnimator.SetBool("MainLoad", true);
-    }
-
-    public void GoToCharacterSelect() {
-        currentScreen = MenuScreens.Character;
-        menuAnimator.SetBool("CharacterSelectLoad", true);
-    }
-
-    public void CharacterSelectToMain() {
-        currentScreen = MenuScreens.Main;
-        menuAnimator.SetBool("CharacterSelectLoad", false);
-        if (currentMatch != null) {
-            currentMatch.LeaveMatch();
-            currentMatch = null;
-        }
-    }
-
-    public void GoToSettings() {
-        currentScreen = MenuScreens.Settings;
-        menuAnimator.SetBool("SettingsLoad", true);
-    }
-
-    public void ShowConnectionLoad(string message) { 
-        mainThreadEvents.Enqueue(() => {
-            CancelInvoke("DismissConnectionMessage");
-            GameObject connectionInfo = GameObject.FindGameObjectWithTag("ConnectionInfoMessage");
-            if (!IsConnectionMessageShowing()) {
-                connectionInfo.GetComponent<Animator>().Play("MessagePopupAnimation", 0, 0f);
-            }
-            connectionInfo.GetComponentInChildren<Image>().sprite = loadingSprite;
-            connectionInfo.GetComponentInChildren<LoadingSpinner>().rotating = true;
-            connectionInfo.GetComponentInChildren<TextMeshProUGUI>().text = message;
-        });
-    }
-
-    public void ShowConnectionSuccess(string message) {
-        mainThreadEvents.Enqueue(() => {
-            CancelInvoke("DismissConnectionMessage");
-            GameObject connectionInfo = GameObject.FindGameObjectWithTag("ConnectionInfoMessage");
-            connectionInfo.GetComponent<Animator>().Play("MessageAlertAnimation", 0, 0f);
-            connectionInfo.GetComponentInChildren<TextMeshProUGUI>().text = message;
-            connectionInfo.GetComponentInChildren<Image>().sprite = successSprite;
-            connectionInfo.GetComponentInChildren<LoadingSpinner>().rotating = false;
-            Invoke("DismissConnectionMessage", messageTTL);            
-        });
-    }
-
-    public void DismissConnectionMessage() {
-        mainThreadEvents.Enqueue(() => {
-            GameObject connectionInfo = GameObject.FindGameObjectWithTag("ConnectionInfoMessage");
-            if (!IsCurrentAnimationClip(connectionInfo.GetComponent<Animator>(), "MessagePopdownAnimation")) {
-                connectionInfo.GetComponent<Animator>().Play("MessagePopdownAnimation", 0, 0f);
-            }
-        });
-    }
-
-    public void ShowConnectionError(string error) {
-        mainThreadEvents.Enqueue(() => {
-            CancelInvoke("DismissConnectionMessage");
-            GameObject connectionInfo = GameObject.FindGameObjectWithTag("ConnectionInfoMessage");
-            if(!IsConnectionMessageShowing()) {
-                connectionInfo.GetComponent<Animator>().Play("MessagePopupAnimation", 0, 0f);
-            }
-            connectionInfo.GetComponentInChildren<TextMeshProUGUI>().text = error;
-            connectionInfo.GetComponentInChildren<Image>().sprite = errorSprite;
-            connectionInfo.GetComponentInChildren<LoadingSpinner>().rotating = false;
-            Invoke("DismissConnectionMessage", messageTTL);
-        });
-    }
-
-    private bool IsConnectionMessageShowing() {
-        GameObject connectionInfo = GameObject.FindGameObjectWithTag("ConnectionInfoMessage");
-        return IsCurrentAnimationClip(connectionInfo.GetComponent<Animator>(), "MessagePopupAnimation");
-    }
-
-    public void SettingsToMain() {
-        menuAnimator.SetBool("SettingsLoad", false);
-    }
-
-    public void SetupCharacterSelection() {
-        PreselectCharacter();
-    }
-
-    private void PreselectCharacter() {
-        GameObject.FindGameObjectsWithTag("CharacterSelectionContainer")[(int)currentCharacter].GetComponentInChildren<Button>().Select();
-    }
-
-    private void ChangeCharacter() {
-        GameObject.FindGameObjectWithTag("CharacterName").GetComponent<TextMeshProUGUI>().text = currentCharacter.ToString();
-        GameObject.FindGameObjectWithTag("CharacterSelectPreview").GetComponent<Image>().sprite = characterSprites[(int)currentCharacter];
-    }
-
-    public void CharacterSelected() {
-        menuAnimator.Play("CharacterSelectedAnimation", 0, 0f);
-        PlayCharacterSelectAudio();
-
-        if (currentMatch != null) {
-            currentMatch.selectedCharacter = currentCharacter;
-        }
-
-        GameObject[] selectionContainers = GameObject.FindGameObjectsWithTag("CharacterSelectionContainer");
-        for (int i = 0; i < selectionContainers.Length; i++) {
-            GameObject cont = selectionContainers[i];
-            if (cont.GetComponentInChildren<Button>().gameObject == EventSystem.current.currentSelectedGameObject) {                
-                if ((int)currentCharacter != i) {
-                    // todo: do something nice
-                }
-            } else {
-                // todo: undo the niceness
-            }
-        }
     }
 
     public void SetupMainMenu() {
@@ -298,6 +124,127 @@ public class MenuController : MonoBehaviour {
 
     private void PreselectMenuOption() {
         GameObject.FindGameObjectsWithTag("MainMenuOption")[0].GetComponent<Button>().Select();
+    }
+
+    public void PlayQuickMatch() {
+        GoToCharacterSelect();
+        networkController.GetRandomMatch((response) => {
+            mainThreadEvents.Enqueue(() => {
+                if (response.Count > 0) {
+                    string oppIp, oppUsername; int oppPort; bool is_hosting;
+
+                    currentMatch = Instantiate(matchHandler);
+                    response.GetField(out oppIp, "ip", null);
+                    response.GetField(out oppPort, "port", -1);
+                    response.GetField(out is_hosting, "is_hosting", false);
+                    response.GetField(out oppUsername, "username", null);
+
+                    currentMatch.isServer = is_hosting;
+                    currentMatch.opponentIp = oppIp;
+                    currentMatch.opponentPort = oppPort;
+                    currentMatch.opponent.username = oppUsername;
+
+                    FlipConnectionMessage();
+                    ShowConnectionLoad("Waiting for " + oppUsername);
+                    // todo: add OnOpponentReady callback
+                }
+            });
+        });
+    }
+
+    public void ShowLeaderboards() {
+        // todo
+    }
+
+    public void ShowSettings() {
+        GoToSettings();
+    }
+
+    public void QuitGame() {
+        if (currentMatch != null) {
+            currentMatch.LeaveMatch();
+        }
+        networkController.TerminateConnection((response) => {
+            Debug.Log("Quitting...");
+            Application.Quit();
+        });
+    }
+
+
+    /*         Character Selection      */
+    /* ================================ */
+
+    public void GoToCharacterSelect() {
+        currentScreen = MenuScreens.Character;
+        menuAnimator.SetBool("CharacterSelectLoad", true);
+    }
+
+    public void SetupCharacterSelection() {
+        PreselectCharacter();
+    }
+
+    private void PreselectCharacter() {
+        GameObject.FindGameObjectsWithTag("CharacterSelectionContainer")[(int)highlightedCharacter].GetComponentInChildren<Button>().Select();
+    }
+
+    private void ChangeCharacter() {
+        GameObject.FindGameObjectWithTag("CharacterName").GetComponent<TextMeshProUGUI>().text = highlightedCharacter.ToString();
+        GameObject.FindGameObjectWithTag("CharacterSelectPreview").GetComponent<Image>().sprite = characterSprites[(int)highlightedCharacter];
+    }
+
+    public void CharacterSelected() {
+        menuAnimator.Play("CharacterSelectedAnimation", 0, 0f);
+        PlayCharacterSelectAudio();
+
+        GameObject[] selectionContainers = GameObject.FindGameObjectsWithTag("CharacterSelectionContainer");
+        for (int i = 0; i < selectionContainers.Length; i++) {
+            GameObject cont = selectionContainers[i];
+            if (cont.GetComponentInChildren<Button>().gameObject == EventSystem.current.currentSelectedGameObject) {
+                if ((int)highlightedCharacter != i) {
+                    // todo: do something nice
+                }
+            } else {
+                // todo: undo the niceness
+            }
+        }
+
+        SNBGlobal.thisPlayer.character = highlightedCharacter;
+        if (currentMatch != null) {
+            currentMatch.PlayerReady();
+        }
+    }
+
+    private void UpdateHighlightedCharacter() {
+        GameObject[] selectionContainers = GameObject.FindGameObjectsWithTag("CharacterSelectionContainer");
+        for (int i = 0; i < selectionContainers.Length; i++) {
+            GameObject cont = selectionContainers[i];
+            if (cont.GetComponentInChildren<Button>().gameObject == EventSystem.current.currentSelectedGameObject) {
+                cont.GetComponent<Image>().color = new Color(1f, 0.9896f, 0);
+                if ((int)highlightedCharacter != i) {
+                    highlightedCharacter = (CharacterType)i;
+                    menuAnimator.Play("CharacterSelectionChangedAnimation", -1, 0f);
+                }
+            } else {
+                cont.GetComponent<Image>().color = new Color(1f, 1f, 1f);
+            }
+        }
+    }
+
+    public void CharacterSelectToMain() {
+        currentScreen = MenuScreens.Main;
+        menuAnimator.SetBool("CharacterSelectLoad", false);
+        if (currentMatch != null) {
+            currentMatch.LeaveMatch();
+            currentMatch = null;
+        }
+    }
+
+    /*             Settings             */
+    /* ================================ */
+
+    public void GoToSettings() {
+        currentScreen = MenuScreens.Settings;
+        menuAnimator.SetBool("SettingsLoad", true);
     }
 
     public void SetupSettingsMenu() {
@@ -362,9 +309,19 @@ public class MenuController : MonoBehaviour {
         networkController.port = port != "" ? Int32.Parse(port) : SNBGlobal.defaultServerPort;
     }
 
-    private bool IsCurrentAnimationClip(Animator animator, string clipName) {
-        return animator.GetCurrentAnimatorClipInfo(0).Length > 0 && 
-                animator.GetCurrentAnimatorClipInfo(0)[0].clip.name == clipName;
+    public void SettingsToMain() {
+        menuAnimator.SetBool("SettingsLoad", false);
+    }
+
+    /*               Audio               */
+    /* ================================ */
+
+    public void PlayLogoCrash() {
+        GetComponent<AudioSource>().PlayOneShot(logoCrashAudio);
+    }
+
+    public void PlayMenuMusic() {
+        GetComponent<AudioSource>().PlayOneShot(mainMenuMusic, menuMusicVolume);
     }
 
     public void PlayButtonHighlightAudio() {
@@ -377,5 +334,86 @@ public class MenuController : MonoBehaviour {
 
     public void PlayCharacterSelectAudio() {
         buttonSFXSource.PlayOneShot(characterSelectAudio);
+    }
+
+    /*      Connection Message          */
+    /* ================================ */
+
+    public void ShowConnectionLoad(string message) {
+        mainThreadEvents.Enqueue(() => {
+            CancelInvoke("DismissConnectionMessage");
+            GameObject connectionInfo = GameObject.FindGameObjectWithTag("ConnectionInfoMessage");
+            if (!IsConnectionMessageShowing()) {
+                connectionInfo.GetComponent<Animator>().Play("MessagePopupAnimation", 0, 0f);
+            }
+            UpdateConnectionMessage(message, ConnectionMessageState.Loading);
+        });
+    }
+
+    public void ShowConnectionSuccess(string message) {
+        mainThreadEvents.Enqueue(() => {
+            CancelInvoke("DismissConnectionMessage");
+            GameObject connectionInfo = GameObject.FindGameObjectWithTag("ConnectionInfoMessage");
+            connectionInfo.GetComponent<Animator>().Play("MessageAlertAnimation", 0, 0f);
+            UpdateConnectionMessage(message, ConnectionMessageState.Success);
+            Invoke("DismissConnectionMessage", messageTTL);
+        });
+    }
+
+    public void DismissConnectionMessage() {
+        mainThreadEvents.Enqueue(() => {
+            GameObject connectionInfo = GameObject.FindGameObjectWithTag("ConnectionInfoMessage");
+            if (!IsCurrentAnimationClip(connectionInfo.GetComponent<Animator>(), "MessagePopdownAnimation")) {
+                connectionInfo.GetComponent<Animator>().Play("MessagePopdownAnimation", 0, 0f);
+            }
+        });
+    }
+
+    public void ShowConnectionError(string error) {
+        mainThreadEvents.Enqueue(() => {
+            CancelInvoke("DismissConnectionMessage");
+            GameObject connectionInfo = GameObject.FindGameObjectWithTag("ConnectionInfoMessage");
+            if (!IsConnectionMessageShowing()) {
+                connectionInfo.GetComponent<Animator>().Play("MessagePopupAnimation", 0, 0f);
+            }
+            UpdateConnectionMessage(error, ConnectionMessageState.Error);
+            Invoke("DismissConnectionMessage", messageTTL);
+        });
+    }
+
+    private bool IsConnectionMessageShowing() {
+        GameObject connectionInfo = GameObject.FindGameObjectWithTag("ConnectionInfoMessage");
+        return IsCurrentAnimationClip(connectionInfo.GetComponent<Animator>(), "MessagePopupAnimation");
+    }
+
+    private void UpdateConnectionMessage(string message, ConnectionMessageState state) {
+        GameObject[] connectionInfoContainers = GameObject.FindGameObjectsWithTag("InfoMessageStateContainer");
+        foreach (GameObject cont in connectionInfoContainers) {
+            if (cont.GetComponent<CanvasGroup>().alpha == 1.0f) {
+                cont.GetComponentInChildren<TextMeshProUGUI>().text = message;
+                cont.GetComponentInChildren<Image>().sprite = state == ConnectionMessageState.Error ? errorSprite :
+                                                                        state == ConnectionMessageState.Success ? successSprite : loadingSprite;
+                cont.GetComponentInChildren<LoadingSpinner>().rotating = state == ConnectionMessageState.Loading;
+            }
+        }
+    }
+
+    private void FlipConnectionMessage() {
+        GameObject[] connectionInfoContainers = GameObject.FindGameObjectsWithTag("InfoMessageStateContainer");
+        foreach (GameObject cont in connectionInfoContainers) {
+            if (cont.GetComponent<CanvasGroup>().alpha == 0) {
+                cont.GetComponent<CanvasGroup>().alpha = 1.0f;
+            } else {
+                cont.GetComponent<CanvasGroup>().alpha = 0;
+            }
+        }
+    }
+
+    /*         Miscellaneaous?          */
+    /* ================================ */
+
+    private bool IsCurrentAnimationClip(Animator animator, string clipName) {
+        return animator.GetCurrentAnimatorClipInfo(0).Length > 0 &&
+                animator.GetCurrentAnimatorClipInfo(0)[0].clip.name == clipName;
     }
 }

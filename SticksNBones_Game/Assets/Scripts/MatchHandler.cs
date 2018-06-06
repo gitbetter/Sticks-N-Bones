@@ -25,22 +25,13 @@ public class MatchHandler : MonoBehaviour {
             }
         }
     }
-    public CharacterType selectedCharacter {
-        get { return _selectedCharacter; }
-        set {
-            if (value != _selectedCharacter) {
-                _selectedCharacter = value;
-                if (_selectedCharacter != CharacterType.None) PlayerReady();
-            }
-        }
-    }
     [HideInInspector] public bool isServer = false;
+    [HideInInspector] public SNBPlayer opponent = new SNBPlayer();
 
     private int hostId = 0, connectionId = 0;
     private byte channelId = 0;
     private string _opponentIp = null;
     private int _opponentPort = -1;
-    private CharacterType _selectedCharacter = CharacterType.None;
 
     private enum ConnectionState { Disconnected, Connected };
     private ConnectionState status = ConnectionState.Disconnected;
@@ -164,7 +155,6 @@ public class MatchHandler : MonoBehaviour {
         isServer = false;
         _opponentIp = null;
         _opponentPort = -1;
-        _selectedCharacter = CharacterType.None;
         status = ConnectionState.Disconnected;
     }
 }

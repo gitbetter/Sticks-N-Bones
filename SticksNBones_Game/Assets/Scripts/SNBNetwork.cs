@@ -80,8 +80,9 @@ public class SNBNetwork : MonoBehaviour {
     private void ConnectionCallback(IAsyncResult ar) {
         try {
             sock.EndConnect(ar);
-            OnLoadSuccess("Connected to server!");
             sock.BeginReceive(latestData, 0, latestData.Length, SocketFlags.None, new AsyncCallback(ReceiveCallback), null);
+            OnLoadSuccess("Connected to server!");
+            SendRequest("set:username=" + SNBGlobal.thisPlayer.username);
         } catch (SocketException ex) {
             if (connectionRetries > 0) {
                 --connectionRetries;
@@ -128,15 +129,15 @@ public class SNBNetwork : MonoBehaviour {
         SendRequest("exit", callback);
     }
 
-    private void SendRequest(string request, Action<JSONObject> callback) {
+    private void SendRequest(string request, Action<JSONObject> callback = null) {
         if (sock.Connected) {
             byte[] data = Encoding.UTF8.GetBytes(request);
             sock.Send(data);
             if (request == "exit") {
                 sock.Close();
-                callback(new JSONObject());
+                if (callback != null) callback(new JSONObject());
             } else {
-                AddCallbackToQueue(request, callback);
+                if (callback != null) AddCallbackToQueue(request, callback);
             }
         } else {
             callback(new JSONObject());

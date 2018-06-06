@@ -85,10 +85,12 @@ class Server():
                 player1.sock.send(json.dumps({'request': 'match:random',
                                               'ip': player2.addr[0],
                                               'port': player2.addr[1],
+                                              'username': player2.username,
                                               'is_hosting': server == player1}).encode() if player2 else '{}'.encode())
                 player2.sock.send(json.dumps({'request': 'match:random',
                                               'ip': player1.addr[0],
                                               'port': player1.addr[1],
+                                              'username': player1.username,
                                               'is_hosting': server == player2}).encode() if player1 else '{}'.encode())
 
                 # Add each player to in_match list
@@ -98,13 +100,13 @@ class Server():
         self.matchmaking_wait_cond.release()
 
     def ListPlayers(self):
-        print("\n-------------- Online Players ---------------\n")
+        print("\n" + '-' * 22 + " Online Players " + '-' * 22 + "\n")
         if len(self.online_clients) == 0:
-            print ("\tNobody is online at the moment.\n")
+            print ("\t\t\tNobody is online at the moment.\n")
         else:
             for c in self.online_clients:
-                print("\t- %s:%d\n" % c.addr)
-        print("---------------------------------------------\n")
+                print("\t- %s online at %s:%d\n" % (c.username, c.addr[0], c.addr[1]))
+        print('-' * 60 + "\n")
 
     def AddClient(self, client):
         with self.clients_list_lock:
@@ -165,6 +167,8 @@ class Server():
 
 class ClientHandler:
     def __init__(self, sock, addr):
+        # Data
+        self.username = None
         # Networking
         self.running = True
         self.sock = sock
@@ -174,6 +178,7 @@ class ClientHandler:
         self.msg_thread.start()
         # Misc.
         self.command_map = {'match': self.HandleMatchmaking,
+                            'set': self.SetClientData,
                             'exit': self.CloseConnection}
 
     def HandleSocketConnection(self):
@@ -194,6 +199,12 @@ class ClientHandler:
     def HandleMatchmaking(self, arg):
         if (arg == "random"):
             Server.main().AddToWaiting(self)
+
+    def SetClientData(self, arg):
+        field, value = arg.split("=")
+        if field == "username":
+            self.username = value
+            # todo: send error if username exists
 
     def CloseConnection(self, arg):
         print("\r|Sticks N' Bones| - %s:%s jumping offline" % self.addr)

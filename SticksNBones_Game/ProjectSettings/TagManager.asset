@@ -11,6 +11,7 @@ TagManager:
   - MenuBackButton
   - SettingsMenuOption
   - ConnectionInfoMessage
+  - InfoMessageStateContainer
   layers:
   - Default
   - TransparentFX
