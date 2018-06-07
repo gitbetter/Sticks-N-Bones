@@ -88,8 +88,14 @@ public class MenuController : MonoBehaviour {
         }
     }
 
-    /*             Startup               */
-    /* ================================ */
+//       _____ _             _               
+//      /  ___| |           | |              
+//      \ `--.| |_ __ _ _ __| |_ _   _ _ __  
+//       `--. \ __/ _` | '__| __| | | | '_ \ 
+//      /\__/ / || (_| | |  | |_| |_| | |_) |
+//      \____/ \__\__,_|_|   \__|\__,_| .__/ 
+//                                  | |    
+//                                  |_|
 
     private void NavigateIntroMenu() {
         if (Input.anyKeyDown && currentScreen == MenuScreens.First) {
@@ -102,8 +108,12 @@ public class MenuController : MonoBehaviour {
         menuAnimator.SetBool("FirstLoad", true);
     }
 
-    /*             Main Menu            */
-    /* ================================ */
+//    ___  ___      _        ___  ___                 
+//    |  \/  |     (_)       |  \/  |                 
+//    | .  . | __ _ _ _ __   | .  . | ___ _ __ _   _ 
+//    | |\/| |/ _` | | '_ \  | |\/| |/ _ \ '_ \| | | |
+//    | |  | | (_| | | | | | | |  | |  __/ | | | |_| |
+//    \_|  |_/\__,_|_|_| |_| \_|  |_/\___|_| |_|\__,_|
 
     public void GoToMainMenu() {
         currentScreen = MenuScreens.Main;
@@ -144,9 +154,13 @@ public class MenuController : MonoBehaviour {
                     currentMatch.opponentPort = oppPort;
                     currentMatch.opponent.username = oppUsername;
 
+                    currentMatch.OnOpponentConnect += OpponentConnected;
+                    currentMatch.OnOpponentDisconnect += OpponentDisconnected;
+                    currentMatch.OnOpponentReady += OpponentBecameReady;
+                    currentMatch.OnMatchTransition += NextMatchStage;
+
                     FlipConnectionMessage();
                     ShowConnectionLoad("Waiting for " + oppUsername);
-                    // todo: add OnOpponentReady callback
                 }
             });
         });
@@ -170,9 +184,13 @@ public class MenuController : MonoBehaviour {
         });
     }
 
+//     _____ _                          _              _____      _           _   _             
+//    /  __ \ |                        | |            /  ___|    | |         | | (_)            
+//    | /  \/ |__   __ _ _ __ __ _  ___| |_ ___ _ __  \ `--.  ___| | ___  ___| |_ _  ___  _ __  
+//    | |   | '_ \ / _` | '__/ _` |/ __| __/ _ \ '__|  `--. \/ _ \ |/ _ \/ __| __| |/ _ \| '_ \ 
+//    | \__/\ | | | (_| | | | (_| | (__| ||  __/ |    /\__/ /  __/ |  __/ (__| |_| | (_) | | | |
+//     \____/_| |_|\__,_|_|  \__,_|\___|\__\___|_|    \____/ \___|_|\___|\___|\__|_|\___/|_| |_|
 
-    /*         Character Selection      */
-    /* ================================ */
 
     public void GoToCharacterSelect() {
         currentScreen = MenuScreens.Character;
@@ -230,6 +248,25 @@ public class MenuController : MonoBehaviour {
         }
     }
 
+    public void OpponentDisconnected() {
+        FlipConnectionMessage();
+        ShowConnectionLoad("Waiting for opponent");
+    }
+
+    public void OpponentBecameReady() {
+        currentMatch.opponent.state = PlayerState.Ready;
+        ShowConnectionSuccess(currentMatch.opponent.username + " ready to fight!");
+        if (SNBGlobal.thisPlayer.state == PlayerState.Ready) {
+            NextMatchStage();
+        }
+    }
+
+    public void OpponentConnected() { }
+
+    public void NextMatchStage() {
+        // todo: time to fight!
+    }
+
     public void CharacterSelectToMain() {
         currentScreen = MenuScreens.Main;
         menuAnimator.SetBool("CharacterSelectLoad", false);
@@ -239,8 +276,14 @@ public class MenuController : MonoBehaviour {
         }
     }
 
-    /*             Settings             */
-    /* ================================ */
+//     _____      _   _   _                 
+//    /  ___|    | | | | (_)                
+//    \ `--.  ___| |_| |_ _ _ __   __ _ ___ 
+//     `--. \/ _ \ __| __| | '_ \ / _` / __|
+//    /\__/ /  __/ |_| |_| | | | | (_| \__ \
+//    \____/ \___|\__|\__|_|_| |_|\__, |___/
+//                                 __/ |    
+//                                |___/     
 
     public void GoToSettings() {
         currentScreen = MenuScreens.Settings;
@@ -313,8 +356,13 @@ public class MenuController : MonoBehaviour {
         menuAnimator.SetBool("SettingsLoad", false);
     }
 
-    /*               Audio               */
-    /* ================================ */
+//      ___            _ _       
+//     / _ \          | (_)      
+//    / /_\ \_   _  __| |_  ___  
+//    |  _  | | | |/ _` | |/ _ \ 
+//    | | | | |_| | (_| | | (_) |
+//    \_| |_/\__,_|\__,_|_|\___/ 
+
 
     public void PlayLogoCrash() {
         GetComponent<AudioSource>().PlayOneShot(logoCrashAudio);
@@ -336,8 +384,14 @@ public class MenuController : MonoBehaviour {
         buttonSFXSource.PlayOneShot(characterSelectAudio);
     }
 
-    /*      Connection Message          */
-    /* ================================ */
+//     _____                             _   _              ___  ___                               
+//    /  __ \                           | | (_)             |  \/  |                               
+//    | /  \/ ___  _ __  _ __   ___  ___| |_ _  ___  _ __   | .  . | ___  ___ ___  __ _  __ _  ___ 
+//    | |    / _ \| '_ \| '_ \ / _ \/ __| __| |/ _ \| '_ \  | |\/| |/ _ \/ __/ __|/ _` |/ _` |/ _ \
+//    | \__/\ (_) | | | | | | |  __/ (__| |_| | (_) | | | | | |  | |  __/\__ \__ \ (_| | (_| |  __/
+//     \____/\___/|_| |_|_| |_|\___|\___|\__|_|\___/|_| |_| \_|  |_/\___||___/___/\__,_|\__, |\___|
+//                                                                                       __/ |     
+//                                                                                      |___/      
 
     public void ShowConnectionLoad(string message) {
         mainThreadEvents.Enqueue(() => {
@@ -409,8 +463,12 @@ public class MenuController : MonoBehaviour {
         }
     }
 
-    /*         Miscellaneaous?          */
-    /* ================================ */
+//    ___  ____              _ _                                       ___  
+//    |  \/  (_)            | | |                                     |__ \ 
+//    | .  . |_ ___  ___ ___| | | __ _ _ __   ___  __ _  ___  _   _ ___  ) |
+//    | |\/| | / __|/ __/ _ \ | |/ _` | '_ \ / _ \/ _` |/ _ \| | | / __|/ / 
+//    | |  | | \__ \ (_|  __/ | | (_| | | | |  __/ (_| | (_) | |_| \__ \_|  
+//    \_|  |_/_|___/\___\___|_|_|\__,_|_| |_|\___|\__,_|\___/ \__,_|___(_)
 
     private bool IsCurrentAnimationClip(Animator animator, string clipName) {
         return animator.GetCurrentAnimatorClipInfo(0).Length > 0 &&

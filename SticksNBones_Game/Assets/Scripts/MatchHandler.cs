@@ -7,6 +7,16 @@ using System.Text;
 
 public class MatchHandler : MonoBehaviour {
 
+    public delegate void OpponentDisconnect();
+    public delegate void OpponentConnect();
+    public delegate void OpponentReady();
+    public delegate void MatchTransition();
+
+    public event OpponentDisconnect OnOpponentDisconnect;
+    public event OpponentConnect OnOpponentConnect;
+    public event OpponentReady OnOpponentReady;
+    public event MatchTransition OnMatchTransition;
+
     public string opponentIp {
         get { return _opponentIp; }
         set {
@@ -28,13 +38,13 @@ public class MatchHandler : MonoBehaviour {
     [HideInInspector] public bool isServer = false;
     [HideInInspector] public SNBPlayer opponent = new SNBPlayer();
 
+    private enum ConnectionState { Disconnected, Connected };
+    private ConnectionState status = ConnectionState.Disconnected;
+
     private int hostId = 0, connectionId = 0;
     private byte channelId = 0;
     private string _opponentIp = null;
     private int _opponentPort = -1;
-
-    private enum ConnectionState { Disconnected, Connected };
-    private ConnectionState status = ConnectionState.Disconnected;
 
     private void Awake() {
         ResetValues();
@@ -81,19 +91,13 @@ public class MatchHandler : MonoBehaviour {
         NetworkEventType evnt = NetworkTransport.Receive(out outHostId, out outConnectionId, out outChannelId, buffer, SNBGlobal.maxBufferSize, out receiveSize, out error);
         switch(evnt) {
             case NetworkEventType.ConnectEvent:
-                print("Peer Connected");
                 HandleConnectEvent(outHostId, outConnectionId, error);
                 break;
             case NetworkEventType.DataEvent:
-                print("Data Received");
                 HandleDataEvent(outHostId, outConnectionId, buffer, error);
                 break;
             case NetworkEventType.DisconnectEvent:
-                print("Disconnected");
                 HandleDisconnectEvent(outHostId, outConnectionId);
-                break;
-            case NetworkEventType.Nothing:
-                print("Nothing happened");
                 break;
             default:
                 break;
@@ -102,9 +106,12 @@ public class MatchHandler : MonoBehaviour {
     }
 
     private void HandleConnectEvent(int outHostId, int outConnectionId, byte error) {
+        print("Peer Connected");
         if ((NetworkError)error == NetworkError.Ok) {
             status = ConnectionState.Connected;
             if (connectionId == 0) connectionId = outConnectionId;
+            SendPlayerDataToOpponent();
+            OnOpponentConnect();
         } else {
             print("Error connecting to peer");
             // todo: error connecting to peer
@@ -112,8 +119,38 @@ public class MatchHandler : MonoBehaviour {
     }
 
     private void HandleDataEvent(int outHostId, int outConnectionId, byte[] data, byte error) {
+        print("Data Received");
         if ((NetworkError)error == NetworkError.Ok) {
+            string messageType;
             JSONObject dataObj = new JSONObject(Encoding.UTF8.GetString(data));
+
+            dataObj.GetField(out messageType, "messageType", null);
+
+            JSONObject result = null;
+            dataObj.GetField("result", (r) => {
+                result = r;
+            });
+
+            switch (messageType) {
+                case "matchup":
+                    string matchupStatus;
+                    result.GetField(out matchupStatus, "matchupStatus", null);
+
+                    if (matchupStatus == "ready") {
+                        int opponentCharacter;
+                        result.GetField(out opponentCharacter, "playerCharacter", -1);
+                        opponent.character = (CharacterType)opponentCharacter;
+                        OnOpponentReady();
+                    }
+                    break;
+                case "info":
+                    string username;
+                    result.GetField(out username, "username", null);
+                    opponent.username = username;
+                    break;
+                default:
+                    break;
+            }
         } else {
             print("Error receiving data");
             // todo: error receiving peer data
@@ -121,17 +158,24 @@ public class MatchHandler : MonoBehaviour {
     }
 
     private void HandleDisconnectEvent(int outHostId, int outConnectionId) {
+        print("Disconnected");
         if (outHostId == hostId &&
             outConnectionId == connectionId) {
             status = ConnectionState.Disconnected;
+            OnOpponentDisconnect();
         }
     }
 
     public void PlayerReady() {
+        SNBGlobal.thisPlayer.state = PlayerState.Ready;
         if (status == ConnectionState.Connected) {
             byte error;
-            byte[] message = Encoding.UTF8.GetBytes("matchup:ready");
+            byte[] message = Encoding.UTF8.GetBytes("{\"messageType\": \"matchup\", \"result\": {\"matchupStatus\": \"ready\", \"playerCharacter\": " + SNBGlobal.thisPlayer.character + "}}");
             NetworkTransport.Send(hostId, connectionId, channelId, message, message.Length, out error);
+
+            if (opponent.state == PlayerState.Ready) {
+                OnMatchTransition();
+            }
 
             if ((NetworkError)error != NetworkError.Ok) {
                 print("Error sending message: " + message);
@@ -147,6 +191,16 @@ public class MatchHandler : MonoBehaviour {
             if ((NetworkError)error != NetworkError.Ok) {
                 print("Error disconnecting from peer. Will disconnect by timeout.");
             }
+        }
+    }
+
+    public void SendPlayerDataToOpponent() {
+        byte error;
+        byte[] message = Encoding.UTF8.GetBytes("{'messageType': 'info', 'result': {'username': '" + SNBGlobal.thisPlayer.username + "'}}");
+        NetworkTransport.Send(hostId, connectionId, channelId, message, message.Length, out error);
+
+        if ((NetworkError)error != NetworkError.Ok) {
+            print("Error sending message: " + message);
         }
     }
 

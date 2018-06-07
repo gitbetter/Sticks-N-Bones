@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System;
 
 public enum CharacterType { Classico, Ranger, None };
+public enum PlayerState { NotReady, Ready, Dead /* etc. */ };
 
 public static class SNBGlobal : object {
     public static readonly string defaultServerIP = "127.0.0.1";
@@ -28,4 +29,10 @@ public static class SNBGlobal : object {
 public class SNBPlayer {
     public string username = SNBGlobal.GetRandomUsername();
     public CharacterType character = CharacterType.None;
+    public PlayerState state = PlayerState.NotReady;
+
+    public void ResetState() {
+        character = CharacterType.None;
+        state = PlayerState.NotReady;
+    }
 }
