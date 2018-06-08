@@ -254,9 +254,9 @@ public class MenuController : MonoBehaviour {
     }
 
     public void OpponentBecameReady() {
-        currentMatch.opponent.state = PlayerState.Ready;
+        currentMatch.opponent.status = PlayerStatus.Ready;
         ShowConnectionSuccess(currentMatch.opponent.username + " ready to fight!");
-        if (SNBGlobal.thisPlayer.state == PlayerState.Ready) {
+        if (SNBGlobal.thisPlayer.status == PlayerStatus.Ready) {
             NextMatchStage();
         }
     }

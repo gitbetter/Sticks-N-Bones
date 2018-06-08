@@ -3,7 +3,8 @@ using System.Collections.Generic;
 using System;
 
 public enum CharacterType { Classico, Ranger, None };
-public enum PlayerState { NotReady, Ready, Dead /* etc. */ };
+public enum PlayerStatus { NotReady, Ready, Dead /* etc. */ };
+public enum PlayerRole { Local, Opponent, Sandbag, Bot }
 
 public static class SNBGlobal : object {
     public static readonly string defaultServerIP = "127.0.0.1";
@@ -29,10 +30,24 @@ public static class SNBGlobal : object {
 public class SNBPlayer {
     public string username = SNBGlobal.GetRandomUsername();
     public CharacterType character = CharacterType.None;
-    public PlayerState state = PlayerState.NotReady;
+    public PlayerStatus status = PlayerStatus.NotReady;
+    public SNBPlayerState state = new SNBPlayerState();
 
     public void ResetState() {
         character = CharacterType.None;
-        state = PlayerState.NotReady;
+        status = PlayerStatus.NotReady;
+        state = new SNBPlayerState();
+    }
+}
+
+public class SNBPlayerState {
+    public bool dashing = false;
+    public bool skipping = false;
+    public bool blocking = false;
+    public float lastHorizontalThrow = 0f;
+    // todo: last combo array
+
+    public string ToJson() {
+        return "{}";
     }
 }

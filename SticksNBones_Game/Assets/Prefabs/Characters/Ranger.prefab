@@ -241,6 +241,9 @@ GameObject:
   - component: {fileID: 95101828251478066}
   - component: {fileID: 54396755320692164}
   - component: {fileID: 114486300119072556}
+  - component: {fileID: 114415523944496384}
+  - component: {fileID: 114490289272727422}
+  - component: {fileID: 114644851737624886}
   m_Layer: 0
   m_Name: Ranger
   m_TagString: Untagged
@@ -787,6 +790,17 @@ Animator:
   m_HasTransformHierarchy: 1
   m_AllowConstantClipSamplingOptimization: 1
   m_KeepAnimatorControllerStateOnDisable: 0
+--- !u!114 &114415523944496384
+MonoBehaviour:
+  m_ObjectHideFlags: 1
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 100100000}
+  m_GameObject: {fileID: 1691209637007052}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: a99cecbba2fb38740bec9b47e8858951, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
 --- !u!114 &114486300119072556
 MonoBehaviour:
   m_ObjectHideFlags: 1
@@ -801,6 +815,28 @@ MonoBehaviour:
   dashSpeed: 9
   jumpVelocity: 12
   role: 0
+--- !u!114 &114490289272727422
+MonoBehaviour:
+  m_ObjectHideFlags: 1
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 100100000}
+  m_GameObject: {fileID: 1691209637007052}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 7e893db4a0886d94ebe0af6a2a20990e, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+--- !u!114 &114644851737624886
+MonoBehaviour:
+  m_ObjectHideFlags: 1
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 100100000}
+  m_GameObject: {fileID: 1691209637007052}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f9f469944f6178e428de244f66d9e2f8, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
 --- !u!135 &135348155504860848
 SphereCollider:
   m_ObjectHideFlags: 1

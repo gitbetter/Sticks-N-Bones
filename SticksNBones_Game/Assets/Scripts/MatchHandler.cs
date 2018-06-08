@@ -167,13 +167,13 @@ public class MatchHandler : MonoBehaviour {
     }
 
     public void PlayerReady() {
-        SNBGlobal.thisPlayer.state = PlayerState.Ready;
+        SNBGlobal.thisPlayer.status = PlayerStatus.Ready;
         if (status == ConnectionState.Connected) {
             byte error;
             byte[] message = Encoding.UTF8.GetBytes("{\"messageType\": \"matchup\", \"result\": {\"matchupStatus\": \"ready\", \"playerCharacter\": " + SNBGlobal.thisPlayer.character + "}}");
             NetworkTransport.Send(hostId, connectionId, channelId, message, message.Length, out error);
 
-            if (opponent.state == PlayerState.Ready) {
+            if (opponent.status == PlayerStatus.Ready) {
                 OnMatchTransition();
             }
 

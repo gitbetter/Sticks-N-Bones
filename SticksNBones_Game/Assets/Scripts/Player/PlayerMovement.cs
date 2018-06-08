@@ -3,9 +3,7 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
-public class PlayerController : MonoBehaviour {
-
-    public enum PlayerRole { Local, Opponent, Sandbag, Bot }
+public class PlayerMovement : MonoBehaviour {
 
     [SerializeField] float dashSpeed = 9.0f;
     [SerializeField] float jumpVelocity = 12.0f;

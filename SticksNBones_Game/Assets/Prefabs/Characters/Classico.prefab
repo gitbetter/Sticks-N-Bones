@@ -224,6 +224,9 @@ GameObject:
   - component: {fileID: 95171813775983088}
   - component: {fileID: 54901739013972758}
   - component: {fileID: 114388025974795172}
+  - component: {fileID: 114694213594992246}
+  - component: {fileID: 114043482568172922}
+  - component: {fileID: 114897089577868692}
   m_Layer: 0
   m_Name: Classico
   m_TagString: Untagged
@@ -757,6 +760,17 @@ Animator:
   m_HasTransformHierarchy: 1
   m_AllowConstantClipSamplingOptimization: 1
   m_KeepAnimatorControllerStateOnDisable: 0
+--- !u!114 &114043482568172922
+MonoBehaviour:
+  m_ObjectHideFlags: 1
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 100100000}
+  m_GameObject: {fileID: 1740559304209608}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 7e893db4a0886d94ebe0af6a2a20990e, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
 --- !u!114 &114388025974795172
 MonoBehaviour:
   m_ObjectHideFlags: 1
@@ -771,6 +785,28 @@ MonoBehaviour:
   dashSpeed: 9
   jumpVelocity: 12
   role: 0
+--- !u!114 &114694213594992246
+MonoBehaviour:
+  m_ObjectHideFlags: 1
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 100100000}
+  m_GameObject: {fileID: 1740559304209608}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: a99cecbba2fb38740bec9b47e8858951, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+--- !u!114 &114897089577868692
+MonoBehaviour:
+  m_ObjectHideFlags: 1
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 100100000}
+  m_GameObject: {fileID: 1740559304209608}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f9f469944f6178e428de244f66d9e2f8, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
 --- !u!135 &135341870742456372
 SphereCollider:
   m_ObjectHideFlags: 1
