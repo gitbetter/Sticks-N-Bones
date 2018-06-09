@@ -783,6 +783,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   dashSpeed: 9
+  skipSpeed: 1.23
   jumpVelocity: 12
   role: 0
 --- !u!114 &114694213594992246
