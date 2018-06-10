@@ -244,6 +244,7 @@ GameObject:
   - component: {fileID: 114415523944496384}
   - component: {fileID: 114490289272727422}
   - component: {fileID: 114644851737624886}
+  - component: {fileID: 114471128746764274}
   m_Layer: 0
   m_Name: Ranger
   m_TagString: Untagged
@@ -801,6 +802,17 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: a99cecbba2fb38740bec9b47e8858951, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+--- !u!114 &114471128746764274
+MonoBehaviour:
+  m_ObjectHideFlags: 1
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 100100000}
+  m_GameObject: {fileID: 1691209637007052}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 40b0ff942c9ae904887246197cd5e4d1, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
 --- !u!114 &114486300119072556
 MonoBehaviour:
   m_ObjectHideFlags: 1
@@ -812,9 +824,10 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: cc2fde377e973c0429b211836ff99b22, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  dashSpeed: 9
+  dashSpeed: 8.7
   skipSpeed: 1.23
   jumpVelocity: 12
+  dashbackUpVelocity: 8
   role: 0
 --- !u!114 &114490289272727422
 MonoBehaviour:

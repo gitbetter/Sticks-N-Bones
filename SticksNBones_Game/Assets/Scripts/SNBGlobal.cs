@@ -6,13 +6,23 @@ using System.Timers;
 using UnityEngine;
 
 public enum CharacterType { Classico, Ranger, None };
-public enum PlayerStatus { NotReady, Ready, Dead /* etc. */ };
+public enum UserStatus { NotReady, Ready, /* etc. */ };
+public enum PlayerStatus { Alive, Dead };
 public enum PlayerRole { Local, Opponent, Sandbag, Bot };
 public enum PlayerDirection { Left, Right };
 public enum BasicMove { AirKick, AirPunch, Move, MoveBack,
                        MovingJump, StaticJump, Punch,
                        Kick };
 public enum ComboType { Dash, DashBack };
+
+
+//    ___  ___              _____      __
+//    |  \/  |              |_ _|     / _|     
+//    | .  . | _____   _____ | | _ __ | |_ ___
+//    | |\/| |/ _ \ \ / / _ \| || '_ \|  _/ _ \ 
+//    | |  | | (_) \ V /  __/| || | | | || (_) |
+//    \_|  |_/\___/ \_/ \___\___/_| |_|_| \___/ 
+                                         
 
 public struct MoveInfo {
     public BasicMove move;
@@ -27,6 +37,14 @@ public struct MoveInfo {
         moveKey = mk;
     }
 }
+
+//     _____ _   _ ______ _____ _       _           _
+//    /  ___| \ | || ___ \  __ \ |     | |         | |
+//    \ `--.|  \| || |_/ / |  \/ | ___ | |__   __ _| |
+//     `--. \ . ` || ___ \ | __| |/ _ \| '_ \ / _` | |
+//    /\__/ / |\  || |_/ / |_\ \ | (_) | |_) | (_| | |
+//    \____/\_| \_/\____/ \____/_|\___/|_.__/ \__,_|_|
+//
 
 public static class SNBGlobal : object {
     public static readonly string defaultServerIP = "127.0.0.1";
@@ -45,7 +63,7 @@ public static class SNBGlobal : object {
 
     private static System.Random rnd = new System.Random();
 
-    public static SNBPlayer thisPlayer = new SNBPlayer();
+    public static SNBUser thisUser = new SNBUser();
 
     public static string GetRandomUsername() {
         string adj = usernameAdjectives[rnd.Next(usernameAdjectives.Length)];
@@ -55,15 +73,37 @@ public static class SNBGlobal : object {
     }
 }
 
-public class SNBPlayer {
+//     _____ _   _ ______ _   _
+//    /  ___| \ | || ___ \ | | |              
+//    \ `--.|  \| || |_/ / | | |___  ___ _ __
+//     `--. \ . ` || ___ \ | | / __|/ _ \ '__|
+//    /\__/ / |\  || |_/ / |_| \__ \  __/ |   
+//    \____/\_| \_/\____/ \___/|___/\___|_|  
+//
+
+public class SNBUser {
     public string username = SNBGlobal.GetRandomUsername();
     public CharacterType character = CharacterType.None;
-    public PlayerStatus status = PlayerStatus.NotReady;
+    public UserStatus status = UserStatus.NotReady;
+}
+
+//     _____ _   _ ____________ _                       
+//    /  ___| \ | || ___ \ ___ \ |                      
+//    \ `--.|  \| || |_/ / |_/ / | __ _ _   _  ___ _ __ 
+//     `--. \ . ` || ___ \  __/| |/ _` | | | |/ _ \ '__|
+//    /\__/ / |\  || |_/ / |   | | (_| | |_| |  __/ |   
+//    \____/\_| \_/\____/\_|   |_|\__,_|\__, |\___|_|   
+//                                       __/ |          
+//                                      |___/      
+
+public class SNBPlayer {
+    public CharacterType character = CharacterType.None;
+    public PlayerStatus status = PlayerStatus.Alive;
     public SNBPlayerState state = new SNBPlayerState();
 
     public void ResetState() {
         character = CharacterType.None;
-        status = PlayerStatus.NotReady;
+        status = PlayerStatus.Alive;
         state = new SNBPlayerState();
     }
 
@@ -73,23 +113,45 @@ public class SNBPlayer {
     }
 }
 
+//     _____ _   _ ____________ _                       _____ _        _
+//    /  ___| \ | || ___ \ ___ \ |                     /  ___| |      | |      
+//    \ `--.|  \| || |_/ / |_/ / | __ _ _   _  ___ _ __\ `--.| |_ __ _| |_ ___
+//     `--. \ . ` || ___ \  __/| |/ _` | | | |/ _ \ '__|`--. \ __/ _` | __/ _ \
+//    /\__/ / |\  || |_/ / |   | | (_| | |_| |  __/ |  /\__/ / || (_| | ||  __/
+//    \____/\_| \_/\____/\_|   |_|\__,_|\__, |\___|_|  \____/ \__\__,_|\__\___|
+//                                       __/ |                                 
+//                                      |___/                            
+
 public class SNBPlayerState {
     public delegate void ComboEvent(ComboType combo);
+    public delegate void DirectionFlipped();
+
     public event ComboEvent OnComboEvent;
+    public event DirectionFlipped OnDirectionFlipped;
 
     public bool grounded = true;
     public bool dashing = false;
     public bool skipping = false;
     public bool blocking = false;
     public float lastHorizontal = 0f;
-    public PlayerDirection facing = PlayerDirection.Right;
-
-    private Timer comboTimer = new Timer();
-    public double elapsedComboTime = 0;
     public List<MoveInfo> currentCombo = new List<MoveInfo>();
+
+    private PlayerDirection _facing = PlayerDirection.Right;
+    private Timer comboTimer = new Timer();
+    private double elapsedComboTime;
 
     public bool inCombo { get { return currentCombo.Count > 0; } }
     public bool idle { get { return !skipping && !dashing;  } }
+    public PlayerDirection facing {
+        get { return _facing; }
+        set {
+            if (value != _facing) {
+                _facing = value;
+                if (OnDirectionFlipped != null)
+                    OnDirectionFlipped();
+            }
+        }
+    }
 
     public SNBPlayerState() {
         comboTimer.Elapsed += (sender, eventArgs) => ComboElapsedHandler();

@@ -36,7 +36,7 @@ public class MatchHandler : MonoBehaviour {
         }
     }
     [HideInInspector] public bool isServer = false;
-    [HideInInspector] public SNBPlayer opponent = new SNBPlayer();
+    [HideInInspector] public SNBUser opponent = new SNBUser();
 
     private enum ConnectionState { Disconnected, Connected };
     private ConnectionState status = ConnectionState.Disconnected;
@@ -167,13 +167,13 @@ public class MatchHandler : MonoBehaviour {
     }
 
     public void PlayerReady() {
-        SNBGlobal.thisPlayer.status = PlayerStatus.Ready;
+        SNBGlobal.thisUser.status = UserStatus.Ready;
         if (status == ConnectionState.Connected) {
             byte error;
-            byte[] message = Encoding.UTF8.GetBytes("{\"messageType\": \"matchup\", \"result\": {\"matchupStatus\": \"ready\", \"playerCharacter\": " + SNBGlobal.thisPlayer.character + "}}");
+            byte[] message = Encoding.UTF8.GetBytes("{\"messageType\": \"matchup\", \"result\": {\"matchupStatus\": \"ready\", \"playerCharacter\": " + SNBGlobal.thisUser.character + "}}");
             NetworkTransport.Send(hostId, connectionId, channelId, message, message.Length, out error);
 
-            if (opponent.status == PlayerStatus.Ready) {
+            if (opponent.status == UserStatus.Ready) {
                 OnMatchTransition();
             }
 
@@ -196,7 +196,7 @@ public class MatchHandler : MonoBehaviour {
 
     public void SendPlayerDataToOpponent() {
         byte error;
-        byte[] message = Encoding.UTF8.GetBytes("{'messageType': 'info', 'result': {'username': '" + SNBGlobal.thisPlayer.username + "'}}");
+        byte[] message = Encoding.UTF8.GetBytes("{'messageType': 'info', 'result': {'username': '" + SNBGlobal.thisUser.username + "'}}");
         NetworkTransport.Send(hostId, connectionId, channelId, message, message.Length, out error);
 
         if ((NetworkError)error != NetworkError.Ok) {

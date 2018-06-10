@@ -226,7 +226,7 @@ public class MenuController : MonoBehaviour {
             }
         }
 
-        SNBGlobal.thisPlayer.character = highlightedCharacter;
+        SNBGlobal.thisUser.character = highlightedCharacter;
         if (currentMatch != null) {
             currentMatch.PlayerReady();
         }
@@ -254,9 +254,9 @@ public class MenuController : MonoBehaviour {
     }
 
     public void OpponentBecameReady() {
-        currentMatch.opponent.status = PlayerStatus.Ready;
+        currentMatch.opponent.status = UserStatus.Ready;
         ShowConnectionSuccess(currentMatch.opponent.username + " ready to fight!");
-        if (SNBGlobal.thisPlayer.status == PlayerStatus.Ready) {
+        if (SNBGlobal.thisUser.status == UserStatus.Ready) {
             NextMatchStage();
         }
     }

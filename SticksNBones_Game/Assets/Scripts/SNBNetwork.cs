@@ -82,7 +82,7 @@ public class SNBNetwork : MonoBehaviour {
             sock.EndConnect(ar);
             sock.BeginReceive(latestData, 0, latestData.Length, SocketFlags.None, new AsyncCallback(ReceiveCallback), null);
             OnLoadSuccess("Connected to server!");
-            SendRequest("set:username=" + SNBGlobal.thisPlayer.username);
+            SendRequest("set:username=" + SNBGlobal.thisUser.username);
         } catch (SocketException ex) {
             if (connectionRetries > 0) {
                 --connectionRetries;

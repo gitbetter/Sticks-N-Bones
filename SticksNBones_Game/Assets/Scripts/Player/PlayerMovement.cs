@@ -5,20 +5,22 @@ using UnityEngine;
 
 public class PlayerMovement : MonoBehaviour {
 
-    [SerializeField] float dashSpeed = 9.0f;
+    [SerializeField] float dashSpeed = 8.7f;
     [SerializeField] float skipSpeed = 1.23f;
     [SerializeField] float jumpVelocity = 12.0f;
     [SerializeField] float dashbackUpVelocity = 8.0f;
     [SerializeField] PlayerRole role = PlayerRole.Local;
 
     private Animator playerAnimator;
-    private SNBPlayer player = SNBGlobal.thisPlayer;
+    private SNBPlayer player;
 
     void Start() {
         playerAnimator = GetComponent<Animator>();
+        player = GetComponent<PlayerManagement>().player;
 
         if (role == PlayerRole.Local) {
             player.state.OnComboEvent += HandleComboEvent;
+            player.state.OnDirectionFlipped += HandleDirectionFlipped;
         }
     }
 
@@ -26,8 +28,8 @@ public class PlayerMovement : MonoBehaviour {
         if (role == PlayerRole.Local) {
             RespondToHAxis();
             CharacterJump();
-            LookAtOpponent();
         }
+        LookAtOpponent();
     }
 
     private void RespondToHAxis() {
@@ -127,6 +129,14 @@ public class PlayerMovement : MonoBehaviour {
                 break;
             default:
                 break;
+        }
+    }
+
+    private void HandleDirectionFlipped() {
+        if (!player.state.idle && player.state.grounded) {
+            player.state.dashing = false;
+            player.state.skipping = true;
+            playerAnimator.CrossFade("SkipBack", 0.2f);
         }
     }
 

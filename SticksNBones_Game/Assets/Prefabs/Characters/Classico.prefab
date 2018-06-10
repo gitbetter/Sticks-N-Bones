@@ -227,6 +227,7 @@ GameObject:
   - component: {fileID: 114694213594992246}
   - component: {fileID: 114043482568172922}
   - component: {fileID: 114897089577868692}
+  - component: {fileID: 114237938725138848}
   m_Layer: 0
   m_Name: Classico
   m_TagString: Untagged
@@ -771,6 +772,17 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 7e893db4a0886d94ebe0af6a2a20990e, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+--- !u!114 &114237938725138848
+MonoBehaviour:
+  m_ObjectHideFlags: 1
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 100100000}
+  m_GameObject: {fileID: 1740559304209608}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 40b0ff942c9ae904887246197cd5e4d1, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
 --- !u!114 &114388025974795172
 MonoBehaviour:
   m_ObjectHideFlags: 1
@@ -782,9 +794,10 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: cc2fde377e973c0429b211836ff99b22, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  dashSpeed: 9
+  dashSpeed: 8.7
   skipSpeed: 1.23
   jumpVelocity: 12
+  dashbackUpVelocity: 8
   role: 0
 --- !u!114 &114694213594992246
 MonoBehaviour:
