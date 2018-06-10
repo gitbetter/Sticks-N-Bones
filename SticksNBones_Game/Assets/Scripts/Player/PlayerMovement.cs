@@ -8,23 +8,43 @@ public class PlayerMovement : MonoBehaviour {
     [SerializeField] float dashSpeed = 9.0f;
     [SerializeField] float skipSpeed = 1.23f;
     [SerializeField] float jumpVelocity = 12.0f;
+    [SerializeField] float dashbackUpVelocity = 8.0f;
     [SerializeField] PlayerRole role = PlayerRole.Local;
 
     private Animator playerAnimator;
+    private SNBPlayer player = SNBGlobal.thisPlayer;
 
-	void Start () {
+    void Start() {
         playerAnimator = GetComponent<Animator>();
 
         if (role == PlayerRole.Local) {
-            SNBGlobal.thisPlayer.state.OnComboEvent += HandleComboEvent;
+            player.state.OnComboEvent += HandleComboEvent;
         }
-	}
-	
-	void Update () {
+    }
+
+    void Update() {
         if (role == PlayerRole.Local) {
             RespondToHAxis();
             CharacterJump();
             LookAtOpponent();
+        }
+    }
+
+    private void RespondToHAxis() {
+        float horizontalMove = Input.GetAxisRaw("Horizontal");
+        player.state.lastHorizontal = horizontalMove;
+        Move();
+    }
+
+    private void CharacterJump() {
+        if (Input.GetButtonDown("Jump") && player.state.grounded) {
+            player.state.grounded = false;
+            GetComponent<Rigidbody>().velocity = new Vector3(0, jumpVelocity);
+            if (player.state.idle) {
+                playerAnimator.CrossFade("StaticJump", 0.2f);
+            } else {
+                playerAnimator.CrossFade("MovingJump", 0.2f);
+            }
         }
     }
 
@@ -33,78 +53,77 @@ public class PlayerMovement : MonoBehaviour {
         foreach (PlayerMovement p in players) {
             if (p.gameObject != this.gameObject) {
                 Vector3 dist = p.gameObject.transform.position - transform.position;
-                transform.rotation = dist.x < 0 ? Quaternion.Euler(0, -90f, 0) : Quaternion.Euler(0, 90f, 0);   // warning: 90f might act as magic number
+                transform.rotation = dist.x < 0 ? Quaternion.Euler(0, -90f, 0) : Quaternion.Euler(0, 90f, 0);  // warning: 90f might act as magic number
+                player.state.facing = dist.x < 0 ? PlayerDirection.Left : PlayerDirection.Right;
             }
         }
-    }
-
-    private void CharacterJump() {
-        if (Input.GetButtonDown("Jump") && SNBGlobal.thisPlayer.state.grounded) {
-            GetComponent<Rigidbody>().velocity = new Vector3(0, jumpVelocity);
-            playerAnimator.SetTrigger("jump");
-            SNBGlobal.thisPlayer.state.grounded = false;
-        }
-    }
-
-    private void RespondToHAxis() {
-        float horizontalMove = Input.GetAxisRaw("Horizontal");
-        SNBGlobal.thisPlayer.state.lastHorizontal = horizontalMove;
-        Move();
     }
 
     private void Move() {
-        if (SNBGlobal.thisPlayer.state.lastHorizontal != 0) {
-            if (!SNBGlobal.thisPlayer.state.dashing && !SNBGlobal.thisPlayer.state.skipping) {
-                SNBGlobal.thisPlayer.ExecuteMove(BasicMove.Move);
+        if (player.state.lastHorizontal != 0) {
+            if (player.state.idle) {
+                if (MovingBack()) player.ExecuteMove(BasicMove.MoveBack);
+                else player.ExecuteMove(BasicMove.Move);
             }
 
-            if (SNBGlobal.thisPlayer.state.dashing) {
+            if (player.state.dashing) {
                 Dash();
             } else {
-                Skip();
+                if (MovingBack()) Skip(-1);
+                else Skip();
             }
         } else {
-            StopDash();
-            StopSkip();
+            StopMoving();
         }
+    }
+
+    private bool MovingBack() {
+        return (player.state.facing == PlayerDirection.Right && player.state.lastHorizontal < 0) ||
+               (player.state.facing == PlayerDirection.Left && player.state.lastHorizontal > 0);
     }
 
     private void Dash() {
-        float newX = transform.position.x + SNBGlobal.thisPlayer.state.lastHorizontal * dashSpeed * Time.deltaTime;
+        float newX = transform.position.x + player.state.lastHorizontal * dashSpeed * Time.deltaTime;
         transform.position = new Vector3(newX, transform.position.y, transform.position.z);
-        if (!SNBGlobal.thisPlayer.state.dashing) {
-            SNBGlobal.thisPlayer.state.dashing = true;
-            playerAnimator.Play("Dash", 0, 0f);
+        if (!player.state.dashing && player.state.grounded) {
+            player.state.dashing = true;
+            playerAnimator.CrossFade("Dash", 0.2f);
         }
     }
 
-    private void Skip() {
-        float newX = transform.position.x + SNBGlobal.thisPlayer.state.lastHorizontal * skipSpeed * Time.deltaTime;
+    private void DashBack() {
+        GetComponent<Rigidbody>().velocity = new Vector3(0, dashbackUpVelocity);
+        if (!player.state.dashing && player.state.grounded) {
+            player.state.dashing = true;
+            player.state.grounded = false;
+            playerAnimator.CrossFade("DashBack", 0.2f);
+        }
+    }
+
+    private void Skip(int direction = 1 /* for forward */) {
+        float newX = transform.position.x + player.state.lastHorizontal * skipSpeed * Time.deltaTime;
         transform.position = new Vector3(newX, transform.position.y, transform.position.z);
-        if (!SNBGlobal.thisPlayer.state.skipping) {
-            SNBGlobal.thisPlayer.state.skipping = true;
-            playerAnimator.Play("Skip", 0, 0f);
+        if (!player.state.skipping && player.state.grounded) {
+            player.state.skipping = true;
+            if (direction == 1) playerAnimator.CrossFade("Skip", 0.2f);
+            else playerAnimator.CrossFade("SkipBack", 0.2f);
         }
     }
 
-    private void StopDash() {
-        if (!playerAnimator.GetCurrentAnimatorStateInfo(0).IsName("Idle")) {
-            playerAnimator.Play("Idle", 0, 0f);
+    private void StopMoving() {
+        if (!player.state.idle) {
+            player.state.dashing = player.state.skipping = false;
+            playerAnimator.CrossFade("Idle", 0.2f);
         }
-        SNBGlobal.thisPlayer.state.dashing = false;
-    }
-
-    private void StopSkip() {
-        if (!playerAnimator.GetCurrentAnimatorStateInfo(0).IsName("Idle")) {
-            playerAnimator.Play("Idle", 0, 0f);
-        }
-        SNBGlobal.thisPlayer.state.skipping = false;
     }
 
     private void HandleComboEvent(ComboType combo) {
         switch (combo) {
             case ComboType.Dash:
                 Dash();
+                break;
+            case ComboType.DashBack:
+                DashBack();
                 break;
             default:
                 break;
@@ -113,7 +132,15 @@ public class PlayerMovement : MonoBehaviour {
 
     private void OnCollisionEnter(Collision collision) {
         if (collision.gameObject.layer == LayerMask.NameToLayer("Ground")) {
-            SNBGlobal.thisPlayer.state.grounded = true;
+            if (!player.state.grounded) {
+                player.state.grounded = true;
+                if (player.state.idle) {
+                    playerAnimator.CrossFade("Idle", 0.2f);
+                } else if (player.state.skipping || player.state.dashing) {
+                    player.state.dashing = false;
+                    playerAnimator.CrossFade("Skip", 0.2f);
+                }
+            }
         }
     }
 }

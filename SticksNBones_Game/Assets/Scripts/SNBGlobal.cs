@@ -8,6 +8,7 @@ using UnityEngine;
 public enum CharacterType { Classico, Ranger, None };
 public enum PlayerStatus { NotReady, Ready, Dead /* etc. */ };
 public enum PlayerRole { Local, Opponent, Sandbag, Bot };
+public enum PlayerDirection { Left, Right };
 public enum BasicMove { AirKick, AirPunch, Move, MoveBack,
                        MovingJump, StaticJump, Punch,
                        Kick };
@@ -81,6 +82,7 @@ public class SNBPlayerState {
     public bool skipping = false;
     public bool blocking = false;
     public float lastHorizontal = 0f;
+    public PlayerDirection facing = PlayerDirection.Right;
 
     private Timer comboTimer = new Timer();
     public double elapsedComboTime = 0;

@@ -233,6 +233,11 @@ Prefab:
       propertyPath: m_RootOrder
       value: 1
       objectReference: {fileID: 0}
+    - target: {fileID: 54901739013972758, guid: ad5c15da505a19d4dabee480995fca6b,
+        type: 2}
+      propertyPath: m_CollisionDetection
+      value: 2
+      objectReference: {fileID: 0}
     m_RemovedComponents: []
   m_ParentPrefab: {fileID: 100100000, guid: ad5c15da505a19d4dabee480995fca6b, type: 2}
   m_IsPrefabParent: 0
@@ -279,6 +284,10 @@ Prefab:
         type: 2}
       propertyPath: role
       value: 2
+      objectReference: {fileID: 0}
+    - target: {fileID: 1691209637007052, guid: 01b60765c0d69164eaccd589d494ad4a, type: 2}
+      propertyPath: m_IsActive
+      value: 0
       objectReference: {fileID: 0}
     m_RemovedComponents: []
   m_ParentPrefab: {fileID: 100100000, guid: 01b60765c0d69164eaccd589d494ad4a, type: 2}
