@@ -130,10 +130,10 @@ public class SNBPlayerState {
     public event DirectionFlipped OnDirectionFlipped;
 
     public bool grounded = true;
-    public bool dashing = false;
-    public bool skipping = false;
-    public bool blocking = false;
-    public float lastHorizontal = 0f;
+    public bool dashing = false, skipping = false, blocking = false,
+                crouching = false;
+    public float lastHorizontal = 0;
+    public float lastVertical = 0;
     public List<MoveInfo> currentCombo = new List<MoveInfo>();
 
     private PlayerDirection _facing = PlayerDirection.Right;

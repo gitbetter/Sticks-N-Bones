@@ -5,7 +5,7 @@ using UnityEngine;
 
 public class PlayerMovement : MonoBehaviour {
 
-    [SerializeField] float dashSpeed = 8.7f;
+    [SerializeField] float dashSpeed = 6.12f;
     [SerializeField] float skipSpeed = 1.23f;
     [SerializeField] float jumpVelocity = 12.0f;
     [SerializeField] float dashbackUpVelocity = 8.0f;
@@ -27,6 +27,7 @@ public class PlayerMovement : MonoBehaviour {
     void Update() {
         if (role == PlayerRole.Local) {
             RespondToHAxis();
+            RespondToVAxis();
             CharacterJump();
         }
         LookAtOpponent();
@@ -38,8 +39,15 @@ public class PlayerMovement : MonoBehaviour {
         Move();
     }
 
+    private void RespondToVAxis() {
+        float verticalMove = Input.GetAxisRaw("Vertical");
+        player.state.lastVertical = verticalMove;
+        Move();
+    }
+
     private void CharacterJump() {
-        if (Input.GetButtonDown("Jump") && player.state.grounded) {
+        if ((Input.GetButtonDown("Jump") || player.state.lastVertical > 0) 
+            && player.state.grounded) {
             player.state.grounded = false;
             GetComponent<Rigidbody>().velocity = new Vector3(0, jumpVelocity);
             if (player.state.idle) {
@@ -62,6 +70,14 @@ public class PlayerMovement : MonoBehaviour {
     }
 
     private void Move() {
+        if (player.state.lastVertical != 0) {
+            if (player.state.lastVertical < 0) {
+                Crouch(); /* and */ return;
+            }
+        } else {
+            UnCrouch();
+        }
+
         if (player.state.lastHorizontal != 0) {
             if (player.state.idle) {
                 if (MovingBack()) player.ExecuteMove(BasicMove.MoveBack);
@@ -113,9 +129,28 @@ public class PlayerMovement : MonoBehaviour {
     }
 
     private void StopMoving() {
-        if (!player.state.idle) {
+        if (!player.state.idle && player.state.grounded) {
             player.state.dashing = player.state.skipping = false;
             playerAnimator.CrossFade("Idle", 0.2f);
+        }
+    }
+
+    private void Crouch() {
+        if (!player.state.crouching) {
+            player.state.crouching = true;
+            playerAnimator.CrossFade("Crouch", 0.2f);
+        }
+    }
+
+    private void UnCrouch() {
+        if (player.state.crouching) {
+            player.state.crouching = false;
+            if (player.state.skipping) {
+                if (MovingBack()) playerAnimator.CrossFade("SkipBack", 0.2f);
+                else playerAnimator.CrossFade("Skip", 0.2f);
+            } else {
+                playerAnimator.CrossFade("Idle", 0.2f);
+            }
         }
     }
 
