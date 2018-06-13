@@ -13,11 +13,11 @@ public class PlayerMovement : MonoBehaviour {
 
     private Animator playerAnimator;
     private SNBPlayer player;
+    private bool withinMatchBounds = true;
 
     void Start() {
         playerAnimator = GetComponent<Animator>();
         player = GetComponent<PlayerManagement>().player;
-
         if (role == PlayerRole.Local) {
             player.state.OnComboEvent += HandleComboEvent;
             player.state.OnDirectionFlipped += HandleDirectionFlipped;
@@ -80,14 +80,14 @@ public class PlayerMovement : MonoBehaviour {
 
         if (player.state.lastHorizontal != 0) {
             if (player.state.idle) {
-                if (MovingBack()) player.ExecuteMove(BasicMove.MoveBack);
+                if (IsMovingBack()) player.ExecuteMove(BasicMove.MoveBack);
                 else player.ExecuteMove(BasicMove.Move);
             }
 
             if (player.state.dashing) {
                 Dash();
             } else {
-                if (MovingBack()) Skip(-1);
+                if (IsMovingBack()) Skip(-1);
                 else Skip();
             }
         } else {
@@ -95,7 +95,7 @@ public class PlayerMovement : MonoBehaviour {
         }
     }
 
-    private bool MovingBack() {
+    private bool IsMovingBack() {
         return (player.state.facing == PlayerDirection.Right && player.state.lastHorizontal < 0) ||
                (player.state.facing == PlayerDirection.Left && player.state.lastHorizontal > 0);
     }
@@ -146,7 +146,7 @@ public class PlayerMovement : MonoBehaviour {
         if (player.state.crouching) {
             player.state.crouching = false;
             if (player.state.skipping) {
-                if (MovingBack()) playerAnimator.CrossFade("SkipBack", 0.2f);
+                if (IsMovingBack()) playerAnimator.CrossFade("SkipBack", 0.2f);
                 else playerAnimator.CrossFade("Skip", 0.2f);
             } else {
                 playerAnimator.CrossFade("Idle", 0.2f);
