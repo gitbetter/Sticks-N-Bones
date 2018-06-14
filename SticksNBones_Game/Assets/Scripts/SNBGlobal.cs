@@ -71,6 +71,15 @@ public static class SNBGlobal : object {
         int num = rnd.Next(999);
         return adj + nn + num;
     }
+
+    public static GameObject FindParentWithTag(GameObject child, string tag) {
+        Transform t = child.transform;
+        while (t.parent != null) {
+            if (t.parent.tag == tag) return t.parent.gameObject;
+            else t = t.parent.transform;
+        }
+        return null;
+    }
 }
 
 //     _____ _   _ ______ _   _
