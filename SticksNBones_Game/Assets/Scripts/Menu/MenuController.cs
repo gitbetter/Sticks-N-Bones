@@ -50,7 +50,7 @@ public class MenuController : MonoBehaviour {
     Animator menuAnimator;
     AudioSource buttonSFXSource;
 
-    private void Awake() {
+    private void Awake() {        
         menuAnimator = GetComponent<Animator>();
         buttonSFXSource = NewAudioSource(false, false, 0.75f);
     }
@@ -65,12 +65,12 @@ public class MenuController : MonoBehaviour {
         if (SNBNetwork.instance == null)
             Instantiate(networkController);
 
-        networkController.OnLoad += ShowConnectionLoad;
-        networkController.OnLoadDone += DismissConnectionMessage;
-        networkController.OnLoadSuccess += ShowConnectionSuccess;
-        networkController.onError += ShowConnectionError;
+        SNBNetwork.instance.OnLoad += ShowConnectionLoad;
+        SNBNetwork.instance.OnLoadDone += DismissConnectionMessage;
+        SNBNetwork.instance.OnLoadSuccess += ShowConnectionSuccess;
+        SNBNetwork.instance.onError += ShowConnectionError;
 
-        networkController.InitSocketConnection();
+        SNBNetwork.instance.InitSocketConnection();
     }
 
     private AudioSource NewAudioSource(bool loops, bool playsOnAwake, float volume) {
@@ -138,7 +138,7 @@ public class MenuController : MonoBehaviour {
 
     public void PlayQuickMatch() {
         GoToCharacterSelect();
-        networkController.GetRandomMatch((response) => {
+        SNBNetwork.instance.GetRandomMatch((response) => {
             mainThreadEvents.Enqueue(() => {
                 if (response.Count > 0) {
                     string oppIp, oppUsername; int oppPort; bool is_hosting;
@@ -178,7 +178,7 @@ public class MenuController : MonoBehaviour {
         if (currentMatch != null) {
             currentMatch.LeaveMatch();
         }
-        networkController.TerminateConnection((response) => {
+        SNBNetwork.instance.TerminateConnection((response) => {
             Debug.Log("Quitting...");
             Application.Quit();
         });
@@ -344,12 +344,12 @@ public class MenuController : MonoBehaviour {
 
     public void SetNetworkIP(string ip) {
         // todo: check for valid ip   
-        networkController.serverAddress = ip != "" ? ip : SNBGlobal.defaultServerIP;
+        SNBNetwork.instance.serverAddress = ip != "" ? ip : SNBGlobal.defaultServerIP;
     }
 
     public void SetNetworkPort(string port) {
         // todo: check for valid port
-        networkController.port = port != "" ? Int32.Parse(port) : SNBGlobal.defaultServerPort;
+        SNBNetwork.instance.port = port != "" ? Int32.Parse(port) : SNBGlobal.defaultServerPort;
     }
 
     public void SettingsToMain() {

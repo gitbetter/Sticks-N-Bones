@@ -11,4 +11,7 @@ EditorBuildSettings:
   - enabled: 1
     path: Assets/Scenes/Main Menu.unity
     guid: ef7375f902590f143b0e9664f58024de
+  - enabled: 1
+    path: Assets/Scenes/Giza.unity
+    guid: a2ac543ca2c1be240b1019de1fe1ed33
   m_configObjects: {}

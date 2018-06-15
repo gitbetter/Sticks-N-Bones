@@ -82,12 +82,14 @@ class Server():
 
                 # Assign one of two players as the server, and send the each player the opponents address info
                 server = random.choice([player1, player2])
-                player1.sock.send(json.dumps({'request': 'match:random',
+                player1.sock.send(json.dumps({'request': 'match',
+                                              'type': 'random',
                                               'ip': player2.addr[0],
                                               'port': player2.addr[1],
                                               'username': player2.username,
                                               'is_hosting': server == player1}).encode() if player2 else '{}'.encode())
-                player2.sock.send(json.dumps({'request': 'match:random',
+                player2.sock.send(json.dumps({'request': 'match',
+                                              'type': 'random',
                                               'ip': player1.addr[0],
                                               'port': player1.addr[1],
                                               'username': player1.username,
@@ -107,6 +109,14 @@ class Server():
             for c in self.online_clients:
                 print("\t- %s online at %s:%d\n" % (c.username, c.addr[0], c.addr[1]))
         print('-' * 60 + "\n")
+
+    def BroadcastMessage(self, sender, message):
+        payload = json.dumps({'request': 'msg',
+                              'username': sender.username,
+                              'message': message})
+        for client in self.online_clients:
+            if client != sender:
+                client.sock.send(payload.encode());
 
     def AddClient(self, client):
         with self.clients_list_lock:
@@ -179,6 +189,7 @@ class ClientHandler:
         # Misc.
         self.command_map = {'match': self.HandleMatchmaking,
                             'set': self.SetClientData,
+                            'msg': self.NewChatMessage,
                             'exit': self.CloseConnection}
 
     def HandleSocketConnection(self):
@@ -205,6 +216,11 @@ class ClientHandler:
         if field == "username":
             self.username = value
             # todo: send error if username exists
+
+    def NewChatMessage(self, arg):
+        user, message = arg.split(",", 1)
+        if message:
+            Server.main().BroadcastMessage(self, message.strip())
 
     def CloseConnection(self, arg):
         print("\r|Sticks N' Bones| - %s:%s jumping offline" % self.addr)

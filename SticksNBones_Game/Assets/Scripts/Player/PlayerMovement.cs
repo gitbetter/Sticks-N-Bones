@@ -13,7 +13,6 @@ public class PlayerMovement : MonoBehaviour {
 
     private Animator playerAnimator;
     private SNBPlayer player;
-    private bool withinMatchBounds = true;
 
     void Start() {
         playerAnimator = GetComponent<Animator>();

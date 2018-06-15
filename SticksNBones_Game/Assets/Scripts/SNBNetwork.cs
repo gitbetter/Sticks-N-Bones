@@ -10,11 +10,13 @@ using System.Threading;
 
 public class SNBNetwork : MonoBehaviour {
 
+    public delegate void ChatMessage(string username, string message);
     public delegate void Loading(string message);
     public delegate void LoadingDone();
     public delegate void LoadingSuccess(string message);
     public delegate void Error(string error);
 
+    public event ChatMessage OnChatMessage;
     public event Loading OnLoad;
     public event LoadingDone OnLoadDone;
     public event LoadingSuccess OnLoadSuccess;
@@ -106,27 +108,23 @@ public class SNBNetwork : MonoBehaviour {
             response.GetField(out responseRequest, "request", null);
 
             switch(responseRequest) {
-                case "match:random":
+                case "match":
                     OnLoadSuccess("Found an opponent");
-                    CallAllCallbacks(responseRequest, response);
+                    break;
+                case "msg":
+                    string otherUsername, message;
+                    response.GetField(out otherUsername, "username", null);
+                    response.GetField(out message, "message", null);
+                    OnChatMessage(otherUsername, message);
                     break;
                 default:
                     break;
             }
+
+            CallAllCallbacks(responseRequest, response);
         }
 
         sock.BeginReceive(latestData, 0, latestData.Length, SocketFlags.None, new AsyncCallback(ReceiveCallback), null);
-    }
-
-    public void GetRandomMatch(Action<JSONObject> callback) {
-        if (sock.Connected) {
-            OnLoad("Looking for opponent");
-            SendRequest("match:random", callback);
-        }
-    }
-
-    public void TerminateConnection(Action<JSONObject> callback) {
-        SendRequest("exit", callback);
     }
 
     private void SendRequest(string request, Action<JSONObject> callback = null) {
@@ -144,11 +142,33 @@ public class SNBNetwork : MonoBehaviour {
         }
     }
 
+    public void GetRandomMatch(Action<JSONObject> callback) {
+        if (sock.Connected) {
+            OnLoad("Looking for opponent");
+            SendRequest("match:random", callback);
+        }
+    }
+
+    public void SendChatMessage(string username, string message, Action<JSONObject> callback = null) {
+        SendRequest("msg:" + username + "," + message, callback);
+    }
+
+    public void TerminateConnection(Action<JSONObject> callback) {
+        SendRequest("exit", callback);
+    }
+
     private void AddCallbackToQueue(string key, Action<JSONObject> callback) {
         if (!callbackQueue.ContainsKey(key)) {
             callbackQueue.Add(key, new Queue<Action<JSONObject>>());
         }
         callbackQueue[key].Enqueue(callback);
+    }
+
+    private void CallAllCallbacks(string key, JSONObject response) {
+        List<Action<JSONObject>> userCallbacks = TakeCallbacks(key);
+        foreach (Action<JSONObject> cb in userCallbacks) {
+            cb(response);
+        }
     }
 
     private List<Action<JSONObject>> TakeCallbacks(string key) {
@@ -159,13 +179,6 @@ public class SNBNetwork : MonoBehaviour {
             }
         }
         return callbacks;
-    }
-
-    private void CallAllCallbacks(string key, JSONObject response) {
-        List<Action<JSONObject>> userCallbacks = TakeCallbacks(key);
-        foreach (Action<JSONObject> cb in userCallbacks) {
-            cb(response);
-        }
     }
 
     private void ResetValues() {
