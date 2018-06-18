@@ -9,7 +9,7 @@ public class PlayerMovement : MonoBehaviour {
     [SerializeField] float skipSpeed = 1.23f;
     [SerializeField] float jumpVelocity = 12.0f;
     [SerializeField] float dashbackUpVelocity = 8.0f;
-    [SerializeField] PlayerRole role = PlayerRole.Local;
+    [SerializeField] public PlayerRole role = PlayerRole.Local;
 
     private Animator playerAnimator;
     private SNBPlayer player;

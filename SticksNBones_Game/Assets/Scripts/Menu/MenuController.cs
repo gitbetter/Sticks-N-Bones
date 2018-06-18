@@ -6,6 +6,7 @@ using UnityEngine;
 using UnityEngine.UI;
 using UnityEngine.EventSystems;
 using UnityEngine.Audio;
+using UnityEngine.SceneManagement;
 
 using TMPro;
 
@@ -157,7 +158,7 @@ public class MenuController : MonoBehaviour {
                     currentMatch.OnOpponentConnect += OpponentConnected;
                     currentMatch.OnOpponentDisconnect += OpponentDisconnected;
                     currentMatch.OnOpponentReady += OpponentBecameReady;
-                    currentMatch.OnMatchTransition += NextMatchStage;
+                    currentMatch.OnMatchTransition += MatchCountDown;
 
                     FlipConnectionMessage();
                     ShowConnectionLoad("Waiting for " + oppUsername);
@@ -211,6 +212,7 @@ public class MenuController : MonoBehaviour {
     }
 
     public void CharacterSelected() {
+        ChangeCharacter();
         menuAnimator.Play("CharacterSelectedAnimation", 0, 0f);
         PlayCharacterSelectAudio();
 
@@ -225,7 +227,7 @@ public class MenuController : MonoBehaviour {
                 // todo: undo the niceness
             }
         }
-
+    
         SNBGlobal.thisUser.character = highlightedCharacter;
         if (currentMatch != null) {
             currentMatch.PlayerReady();
@@ -240,7 +242,7 @@ public class MenuController : MonoBehaviour {
                 cont.GetComponent<Image>().color = new Color(1f, 0.9896f, 0);
                 if ((int)highlightedCharacter != i) {
                     highlightedCharacter = (CharacterType)i;
-                    menuAnimator.Play("CharacterSelectionChangedAnimation", -1, 0f);
+                    menuAnimator.Play("CharacterSelectionChangedAnimation", 0, 0f);
                 }
             } else {
                 cont.GetComponent<Image>().color = new Color(1f, 1f, 1f);
@@ -257,14 +259,33 @@ public class MenuController : MonoBehaviour {
         currentMatch.opponent.status = UserStatus.Ready;
         ShowConnectionSuccess(currentMatch.opponent.username + " ready to fight!");
         if (SNBGlobal.thisUser.status == UserStatus.Ready) {
-            NextMatchStage();
+            MatchCountDown();
         }
     }
 
     public void OpponentConnected() { }
 
-    public void NextMatchStage() {
-        // todo: time to fight!
+    public void MatchCountDown() {
+        StartCoroutine(StartCountDown("Match starting in ", 5f, () => {
+            mainThreadEvents.Enqueue(() => {
+                StartMatch("Giza");   // todo: store and handle selected level after level selection is in place
+            });
+        }));
+    }
+
+    private void StartMatch(string levelName) {
+        SceneManager.LoadScene(levelName);
+    }
+
+    private IEnumerator StartCountDown(string counterMessage, float startTime, Action callback = null) {
+        while (startTime >= 0) {
+            ShowConnectionSuccess(counterMessage + " " + startTime--);
+            yield return new WaitForSeconds(1f);
+        }
+
+        if (callback != null) {
+            callback();
+        }
     }
 
     public void CharacterSelectToMain() {

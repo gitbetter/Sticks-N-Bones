@@ -5,10 +5,13 @@ using System.Timers;
 
 using UnityEngine;
 
+/* Type enums */
 public enum CharacterType { Classico, Ranger, None };
+public enum PlayerRole { Local, Opponent, Sandbag, Bot };
+/* Status enums */
 public enum UserStatus { NotReady, Ready, /* etc. */ };
 public enum PlayerStatus { Alive, Dead };
-public enum PlayerRole { Local, Opponent, Sandbag, Bot };
+/* Movement and attack enums */
 public enum PlayerDirection { Left, Right };
 public enum BasicMove { AirKick, AirPunch, Move, MoveBack,
                        MovingJump, StaticJump, Punch,

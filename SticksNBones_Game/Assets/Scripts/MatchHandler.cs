@@ -17,6 +17,9 @@ public class MatchHandler : MonoBehaviour {
     public event OpponentReady OnOpponentReady;
     public event MatchTransition OnMatchTransition;
 
+    [SerializeField] public Sprite[] characterSprites;
+    [SerializeField] public GameObject[] characterPrefabs;
+
     public string opponentIp {
         get { return _opponentIp; }
         set {
@@ -102,7 +105,6 @@ public class MatchHandler : MonoBehaviour {
             default:
                 break;
         }
-        print(evnt);
     }
 
     private void HandleConnectEvent(int outHostId, int outConnectionId, byte error) {
@@ -170,7 +172,7 @@ public class MatchHandler : MonoBehaviour {
         SNBGlobal.thisUser.status = UserStatus.Ready;
         if (status == ConnectionState.Connected) {
             byte error;
-            byte[] message = Encoding.UTF8.GetBytes("{\"messageType\": \"matchup\", \"result\": {\"matchupStatus\": \"ready\", \"playerCharacter\": " + SNBGlobal.thisUser.character + "}}");
+            byte[] message = Encoding.UTF8.GetBytes("{\"messageType\": \"matchup\", \"result\": {\"matchupStatus\": \"ready\", \"playerCharacter\": " + (int)SNBGlobal.thisUser.character + "}}");
             NetworkTransport.Send(hostId, connectionId, channelId, message, message.Length, out error);
 
             if (opponent.status == UserStatus.Ready) {

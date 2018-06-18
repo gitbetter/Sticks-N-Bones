@@ -51,3 +51,10 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 94f9efae7bd453c4fbe937414f3a4a9d, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  characterSprites:
+  - {fileID: 21300000, guid: 9bec038f424beba4487bd25f9c6df12d, type: 3}
+  - {fileID: 21300000, guid: b4aff405a0afe0e42a467a08b9d7937c, type: 3}
+  characterPrefabs:
+  - {fileID: 1740559304209608, guid: ad5c15da505a19d4dabee480995fca6b, type: 2}
+  - {fileID: 1691209637007052, guid: 01b60765c0d69164eaccd589d494ad4a, type: 2}
+  isServer: 0
