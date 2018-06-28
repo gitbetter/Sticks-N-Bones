@@ -167,6 +167,14 @@ public class MenuController : MonoBehaviour {
         });
     }
 
+    public void PlayTraining() {
+        GoToCharacterSelect();
+        currentMatch = Instantiate(matchHandler);
+        currentMatch.matchType = MatchType.Training;
+        currentMatch.OnMatchTransition += MatchCountDown;
+        // todo: Choose random opponent or implement opponent selection
+    }
+
     public void ShowLeaderboards() {
         // todo
     }

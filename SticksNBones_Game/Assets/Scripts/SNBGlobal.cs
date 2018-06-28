@@ -8,6 +8,7 @@ using UnityEngine;
 /* Type enums */
 public enum CharacterType { Classico, Ranger, None };
 public enum PlayerRole { Local, Opponent, Sandbag, Bot };
+public enum MatchType { P2P, Training };
 /* Status enums */
 public enum UserStatus { NotReady, Ready, /* etc. */ };
 public enum PlayerStatus { Alive, Dead };

@@ -38,6 +38,16 @@ public class MatchHandler : MonoBehaviour {
             }
         }
     }
+    public MatchType matchType {
+        get { return _matchType; }
+        set {
+            _matchType = value;
+            if (_matchType == MatchType.Training) {
+                RandomizeOpponent();
+            }
+        }
+    }
+
     [HideInInspector] public bool isServer = false;
     [HideInInspector] public SNBUser opponent = new SNBUser();
 
@@ -48,6 +58,7 @@ public class MatchHandler : MonoBehaviour {
     private byte channelId = 0;
     private string _opponentIp = null;
     private int _opponentPort = -1;
+    private MatchType _matchType = MatchType.P2P;
 
     private void Awake() {
         ResetValues();
@@ -55,7 +66,9 @@ public class MatchHandler : MonoBehaviour {
     }
 
     private void Update() {
-        PollNetworkPeer();
+        if (matchType == MatchType.P2P) {
+            PollNetworkPeer();
+        }
     }
 
     private void SetupMatchConnection() {
@@ -170,18 +183,19 @@ public class MatchHandler : MonoBehaviour {
 
     public void PlayerReady() {
         SNBGlobal.thisUser.status = UserStatus.Ready;
+
         if (status == ConnectionState.Connected) {
             byte error;
             byte[] message = Encoding.UTF8.GetBytes("{\"messageType\": \"matchup\", \"result\": {\"matchupStatus\": \"ready\", \"playerCharacter\": " + (int)SNBGlobal.thisUser.character + "}}");
             NetworkTransport.Send(hostId, connectionId, channelId, message, message.Length, out error);
 
-            if (opponent.status == UserStatus.Ready) {
-                OnMatchTransition();
-            }
-
             if ((NetworkError)error != NetworkError.Ok) {
                 print("Error sending message: " + message);
             }
+        }
+
+        if (opponent.status == UserStatus.Ready || matchType == MatchType.Training) {
+            OnMatchTransition();
         }
     }
 
@@ -194,6 +208,8 @@ public class MatchHandler : MonoBehaviour {
                 print("Error disconnecting from peer. Will disconnect by timeout.");
             }
         }
+
+        Destroy(gameObject);
     }
 
     public void SendPlayerDataToOpponent() {
@@ -206,11 +222,19 @@ public class MatchHandler : MonoBehaviour {
         }
     }
 
+    private void RandomizeOpponent() {
+        System.Random rnd = new System.Random();
+        Array characterValues = Enum.GetValues(typeof(CharacterType));
+        opponent.status = UserStatus.Ready;
+        opponent.character = (CharacterType)characterValues.GetValue(rnd.Next(characterValues.Length - 1));
+    }
+
     private void ResetValues() {
         hostId = connectionId = channelId = 0;
         isServer = false;
         _opponentIp = null;
         _opponentPort = -1;
         status = ConnectionState.Disconnected;
+        matchType = MatchType.P2P;
     }
 }
