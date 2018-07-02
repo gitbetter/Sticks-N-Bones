@@ -144,7 +144,7 @@ public class SNBPlayerState {
 
     public bool grounded = true;
     public bool dashing = false, skipping = false, blocking = false,
-                crouching = false;
+                crouching = false, attacking = false;
     public float lastHorizontal = 0;
     public float lastVertical = 0;
     public List<MoveInfo> currentCombo = new List<MoveInfo>();
