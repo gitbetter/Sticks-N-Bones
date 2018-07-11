@@ -163,6 +163,9 @@ public class MatchHandler : MonoBehaviour {
                     result.GetField(out username, "username", null);
                     opponent.username = username;
                     break;
+                case "state":
+                    // todo: deserialize and update opponent state
+                    break;
                 default:
                     break;
             }
@@ -215,6 +218,16 @@ public class MatchHandler : MonoBehaviour {
     public void SendPlayerDataToOpponent() {
         byte error;
         byte[] message = Encoding.UTF8.GetBytes("{'messageType': 'info', 'result': {'username': '" + SNBGlobal.thisUser.username + "'}}");
+        NetworkTransport.Send(hostId, connectionId, channelId, message, message.Length, out error);
+
+        if ((NetworkError)error != NetworkError.Ok) {
+            print("Error sending message: " + message);
+        }
+    }
+
+    public void SendPlayerStateToOpponent(SNBPlayerState state) {
+        byte error;
+        byte[] message = Encoding.UTF8.GetBytes("{'messageType': 'state', 'result': " + state.ToJson() + "}");
         NetworkTransport.Send(hostId, connectionId, channelId, message, message.Length, out error);
 
         if ((NetworkError)error != NetworkError.Ok) {

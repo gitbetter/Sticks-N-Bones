@@ -6,4 +6,14 @@ public class PlayerManagement : MonoBehaviour {
 
     [HideInInspector] public SNBPlayer player = new SNBPlayer();
 
+    private MatchHandler matchHandler;
+
+    private void Start() {
+        matchHandler = FindObjectOfType<MatchHandler>();
+        player.state.OnStateChanged += SendPlayerState;
+    }
+
+    private void SendPlayerState() {
+        matchHandler.SendPlayerStateToOpponent(player.state);
+    }
 }

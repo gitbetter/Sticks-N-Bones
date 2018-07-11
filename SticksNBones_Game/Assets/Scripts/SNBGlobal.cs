@@ -138,28 +138,111 @@ public class SNBPlayer {
 public class SNBPlayerState {
     public delegate void ComboEvent(ComboType combo);
     public delegate void DirectionFlipped();
+    public delegate void StateChanged();
 
     public event ComboEvent OnComboEvent;
     public event DirectionFlipped OnDirectionFlipped;
+    public event StateChanged OnStateChanged;
 
-    public bool grounded = true;
-    public bool dashing = false, skipping = false, blocking = false,
-                crouching = false, attacking = false;
-    public float lastHorizontal = 0;
-    public float lastVertical = 0;
-    public List<MoveInfo> currentCombo = new List<MoveInfo>();
-
+    private bool _grounded = true;
+    private bool _dashing = false, _skipping = false, _blocking = false,
+                _crouching = false, _attacking = false;
+    private float _lastHorizontal = 0;
+    private float _lastVertical = 0;
     private PlayerDirection _facing = PlayerDirection.Right;
     private Timer comboTimer = new Timer();
     private double elapsedComboTime;
 
+
+    public bool grounded {
+        get { return _grounded; }
+        set {
+            if (value != _grounded) {
+                _grounded = value;
+                OnStateChanged();
+            }
+        }
+    }
+
+    public bool dashing {
+        get { return _dashing; }
+        set {
+            if (value != _dashing) {
+                _dashing = value;
+                OnStateChanged();
+            }
+        }
+    }
+
+    public bool skipping {
+        get { return _skipping; }
+        set {
+            if (value != _skipping) {
+                _skipping = value;
+                OnStateChanged();
+            }
+        }
+    }
+
+    public bool blocking {
+        get { return _blocking; }
+        set {
+            if (value != _blocking) {
+                _blocking = value;
+                OnStateChanged();
+            }
+        }
+    }
+
+    public bool crouching {
+        get { return _crouching; }
+        set {
+            if (value != _crouching) {
+                _crouching = value;
+                OnStateChanged();
+            }
+        }
+    }
+
+    public bool attacking {
+        get { return _attacking; }
+        set {
+            if (value != _attacking) {
+                _attacking = value;
+                OnStateChanged();
+            }
+        }
+    }
+
+    public float lastHorizontal {
+        get { return _lastHorizontal; }
+        set {
+            if (value != _lastHorizontal) {
+                _lastHorizontal = value;
+                OnStateChanged();
+            }
+        }
+    }
+
+    public float lastVertical {
+        get { return _lastVertical; }
+        set {
+            if (value != _lastVertical) {
+                _lastVertical = value;
+                OnStateChanged();
+            }
+        }
+    }
+
+    public List<MoveInfo> currentCombo = new List<MoveInfo>();
     public bool inCombo { get { return currentCombo.Count > 0; } }
-    public bool idle { get { return !skipping && !dashing;  } }
+    public bool idle { get { return !_skipping && !_dashing;  } }
     public PlayerDirection facing {
         get { return _facing; }
         set {
             if (value != _facing) {
                 _facing = value;
+                OnStateChanged();
                 if (OnDirectionFlipped != null)
                     OnDirectionFlipped();
             }
@@ -187,6 +270,7 @@ public class SNBPlayerState {
     public void AddToCombo(BasicMove move) {
         MoveInfo m = new MoveInfo(move, currentCombo.Count + 1, elapsedComboTime);
         currentCombo.Add(m);
+        OnStateChanged();
 
         if (inCombo) {
             CheckCombo(currentCombo);
@@ -213,16 +297,21 @@ public class SNBPlayerState {
         comboTimer.Stop();
         currentCombo.Clear();
         elapsedComboTime = 0;
+        OnStateChanged();
     }
 
     public string ToJson() {
-        return "{\"dashing\": " + dashing + ", " +
-                "\"skipping\": " + skipping + "," +
-                "\"blocking\": " + blocking + "," +
-                "\"lastHorizontalThrow\": " + lastHorizontal + "}";
+        return "{\"dashing\": " + _dashing + ", " +
+                "\"skipping\": " + _skipping + ", " +
+                "\"blocking\": " + _blocking + ", " +
+                "\"crouching\": " + _crouching + ", " +
+                "\"attacking\": " + _attacking + ", " +
+                "\"grounded\": " + _grounded + ", " +
+                "\"lastHorizontalThrow\": " + _lastHorizontal + ", " +
+                "\"lastVerticalThrow\": " + _lastVertical + "}";
     }
 
-    public static SNBPlayerState FromJson() {
+    public static SNBPlayerState FromJson(string state) {
         // todo
         return new SNBPlayerState();
     }

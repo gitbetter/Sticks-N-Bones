@@ -17,10 +17,8 @@ public class PlayerMovement : MonoBehaviour {
     void Start() {
         playerAnimator = GetComponent<Animator>();
         player = GetComponent<PlayerManagement>().player;
-        if (role == PlayerRole.Local) {
-            player.state.OnComboEvent += HandleComboEvent;
-            player.state.OnDirectionFlipped += HandleDirectionFlipped;
-        }
+        player.state.OnComboEvent += HandleComboEvent;
+        player.state.OnDirectionFlipped += HandleDirectionFlipped;
     }
 
     void Update() {

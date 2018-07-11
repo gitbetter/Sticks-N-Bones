@@ -73,7 +73,6 @@ public class SNBNetwork : MonoBehaviour {
         sock.BeginConnect(IPAddress.Parse(_serverAddress), _port, new AsyncCallback(ConnectionCallback), sock);
     }
 
-
     public void ResetSocketConnection() {
         if (sock != null) sock.Close();
         TrySocketConnection();
