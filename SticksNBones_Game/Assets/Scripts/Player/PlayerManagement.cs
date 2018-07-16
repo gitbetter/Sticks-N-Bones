@@ -5,6 +5,7 @@ using UnityEngine;
 public class PlayerManagement : MonoBehaviour {
 
     [HideInInspector] public SNBPlayer player = new SNBPlayer();
+    [SerializeField] public PlayerRole role = PlayerRole.Local;
 
     private MatchHandler matchHandler;
 

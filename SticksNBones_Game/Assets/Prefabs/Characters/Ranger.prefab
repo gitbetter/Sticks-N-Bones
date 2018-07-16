@@ -802,6 +802,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: a99cecbba2fb38740bec9b47e8858951, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  punchDuration: 0.2
+  punchHitSFX: {fileID: 8300000, guid: 062338004ca1b214db36f100297b009f, type: 3}
 --- !u!114 &114471128746764274
 MonoBehaviour:
   m_ObjectHideFlags: 1
@@ -813,6 +815,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 40b0ff942c9ae904887246197cd5e4d1, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  role: 0
 --- !u!114 &114486300119072556
 MonoBehaviour:
   m_ObjectHideFlags: 1
@@ -828,7 +831,6 @@ MonoBehaviour:
   skipSpeed: 1.23
   jumpVelocity: 12
   dashbackUpVelocity: 8
-  role: 0
 --- !u!114 &114490289272727422
 MonoBehaviour:
   m_ObjectHideFlags: 1

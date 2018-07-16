@@ -9,14 +9,16 @@ public class PlayerMovement : MonoBehaviour {
     [SerializeField] float skipSpeed = 1.23f;
     [SerializeField] float jumpVelocity = 12.0f;
     [SerializeField] float dashbackUpVelocity = 8.0f;
-    [SerializeField] public PlayerRole role = PlayerRole.Local;
 
     private Animator playerAnimator;
     private SNBPlayer player;
+    private PlayerRole role;
 
     void Start() {
+        PlayerManagement playerManager = GetComponent<PlayerManagement>();
         playerAnimator = GetComponent<Animator>();
-        player = GetComponent<PlayerManagement>().player;
+        player = playerManager.player;
+        role = playerManager.role;
         player.state.OnComboEvent += HandleComboEvent;
         player.state.OnDirectionFlipped += HandleDirectionFlipped;
     }

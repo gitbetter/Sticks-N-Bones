@@ -6,17 +6,18 @@ using UnityEngine;
 public class PlayerAttack : MonoBehaviour {
 
     [SerializeField] float punchDuration = 0.2f;
-    [SerializeField] public PlayerRole role = PlayerRole.Local;
     [SerializeField] AudioClip punchHitSFX; 
 
     private Animator playerAnimator;
     private SNBPlayer player;
-
+    private PlayerRole role;
     private float punchTime;
 
     private void Start() {
+        PlayerManagement playerManager = GetComponent<PlayerManagement>();
         playerAnimator = GetComponent<Animator>();
-        player = GetComponent<PlayerManagement>().player;
+        player = playerManager.player;
+        role = playerManager.role;
     }
 
     void Update () {

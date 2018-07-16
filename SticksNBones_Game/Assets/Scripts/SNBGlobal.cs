@@ -28,7 +28,7 @@ public enum ComboType { Dash, DashBack };
 //    \_|  |_/\___/ \_/ \___\___/_| |_|_| \___/ 
                                          
 
-public struct MoveInfo {
+public class MoveInfo {
     public BasicMove move;
     public int sequenceNumber;
     public double sequenceTime;
@@ -39,6 +39,24 @@ public struct MoveInfo {
         sequenceNumber = seqNum;
         sequenceTime = seqTime;
         moveKey = mk;
+    }
+
+    public string toJson() {
+        return "{\"move\": " + move.ToString() + ", " +
+                "\"sequenceNumber\": " + sequenceNumber + ", " +
+                "\"sequenceTime\": " + sequenceTime + ", " +
+                "\"moveKey\": " + moveKey + "}";
+    }
+
+    public static MoveInfo fromJson(string json) {
+        JSONObject obj = new JSONObject(json);
+        int move, seqNum; float seqTime; string moveKey;
+        obj.GetField(out move, "move", -1);
+        obj.GetField(out seqNum, "sequenceNumber", -1);
+        obj.GetField(out seqTime, "sequenceTime", -1);
+        obj.GetField(out moveKey, "moveKey", null);
+
+        return new MoveInfo((BasicMove)move, seqNum, (double)seqTime, moveKey);
     }
 }
 
@@ -308,11 +326,51 @@ public class SNBPlayerState {
                 "\"attacking\": " + _attacking + ", " +
                 "\"grounded\": " + _grounded + ", " +
                 "\"lastHorizontalThrow\": " + _lastHorizontal + ", " +
-                "\"lastVerticalThrow\": " + _lastVertical + "}";
+                "\"lastVerticalThrow\": " + _lastVertical + ", " +
+                "\"currentCombo\": " + currentComboToJson() + "}";
     }
 
-    public static SNBPlayerState FromJson(string state) {
-        // todo
-        return new SNBPlayerState();
+    public string currentComboToJson() {
+        string currentComboJson = "[";
+        foreach (MoveInfo m in currentCombo) {
+            currentComboJson += m.toJson() + ", ";
+        }
+        return currentComboJson.Length > 1 ? currentComboJson.Substring(0, currentComboJson.Length - 2) + "]" : currentComboJson + "]";
+    }
+
+    public static SNBPlayerState FromJson(string json) {
+        bool dashing, skipping, blocking, crouching, attacking, grounded;
+        float lastHorizontal, lastVertical;
+        List<MoveInfo> currentCombo = new List<MoveInfo>();
+        string comboMovesArrayStr;
+        SNBPlayerState newState = new SNBPlayerState();
+
+        JSONObject obj = new JSONObject(json);
+        obj.GetField(out dashing, "dashing", false);
+        obj.GetField(out skipping, "skipping", false);
+        obj.GetField(out blocking, "blocking", false);
+        obj.GetField(out crouching, "crouching", false);
+        obj.GetField(out attacking, "attacking", false);
+        obj.GetField(out grounded, "grounded", false);
+        obj.GetField(out lastHorizontal, "lastHorizontalThrow", 0f);
+        obj.GetField(out lastVertical, "lastVerticalThrow", 0);
+        obj.GetField(out comboMovesArrayStr, "currentCombo", null);
+
+        JSONObject comboMoves = new JSONObject(comboMovesArrayStr);
+        foreach(JSONObject j in comboMoves.list) {
+            currentCombo.Add(MoveInfo.fromJson(j.ToString()));
+        }
+
+        newState.dashing = dashing;
+        newState.skipping = skipping;
+        newState.blocking = blocking;
+        newState.crouching = crouching;
+        newState.attacking = attacking;
+        newState.grounded = grounded;
+        newState.lastHorizontal = lastHorizontal;
+        newState.lastVertical = lastVertical;
+        newState.currentCombo = currentCombo;
+
+        return newState;
     }
 }

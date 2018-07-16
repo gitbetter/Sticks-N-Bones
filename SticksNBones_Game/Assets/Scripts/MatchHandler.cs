@@ -164,7 +164,9 @@ public class MatchHandler : MonoBehaviour {
                     opponent.username = username;
                     break;
                 case "state":
-                    // todo: deserialize and update opponent state
+                    string state;
+                    result.GetField(out state, "result", null);
+                    UpdateOpponentState(state);
                     break;
                 default:
                     break;
@@ -216,22 +218,26 @@ public class MatchHandler : MonoBehaviour {
     }
 
     public void SendPlayerDataToOpponent() {
-        byte error;
-        byte[] message = Encoding.UTF8.GetBytes("{'messageType': 'info', 'result': {'username': '" + SNBGlobal.thisUser.username + "'}}");
-        NetworkTransport.Send(hostId, connectionId, channelId, message, message.Length, out error);
+        if (status == ConnectionState.Connected) {
+            byte error;
+            byte[] message = Encoding.UTF8.GetBytes("{'messageType': 'info', 'result': {'username': '" + SNBGlobal.thisUser.username + "'}}");
+            NetworkTransport.Send(hostId, connectionId, channelId, message, message.Length, out error);
 
-        if ((NetworkError)error != NetworkError.Ok) {
-            print("Error sending message: " + message);
+            if ((NetworkError)error != NetworkError.Ok) {
+                print("Error sending message: " + message);
+            }
         }
     }
 
     public void SendPlayerStateToOpponent(SNBPlayerState state) {
-        byte error;
-        byte[] message = Encoding.UTF8.GetBytes("{'messageType': 'state', 'result': " + state.ToJson() + "}");
-        NetworkTransport.Send(hostId, connectionId, channelId, message, message.Length, out error);
+        if (status == ConnectionState.Connected) {
+            byte error;
+            byte[] message = Encoding.UTF8.GetBytes("{'messageType': 'state', 'result': " + state.ToJson() + "}");
+            NetworkTransport.Send(hostId, connectionId, channelId, message, message.Length, out error);
 
-        if ((NetworkError)error != NetworkError.Ok) {
-            print("Error sending message: " + message);
+            if ((NetworkError)error != NetworkError.Ok) {
+                print("Error sending message: " + message);
+            }
         }
     }
 
@@ -240,6 +246,13 @@ public class MatchHandler : MonoBehaviour {
         Array characterValues = Enum.GetValues(typeof(CharacterType));
         opponent.status = UserStatus.Ready;
         opponent.character = (CharacterType)characterValues.GetValue(rnd.Next(characterValues.Length - 1));
+    }
+
+    private static void UpdateOpponentState(string state) {
+        PlayerManagement[] playerManagers = FindObjectsOfType<PlayerManagement>();
+        foreach (PlayerManagement pm in playerManagers) {
+            if (pm.role == PlayerRole.Opponent) pm.player.state = SNBPlayerState.FromJson(state);
+        }
     }
 
     private void ResetValues() {

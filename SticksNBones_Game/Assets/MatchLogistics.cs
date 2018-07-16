@@ -16,7 +16,6 @@ public class MatchLogistics : MonoBehaviour {
 
         thisCharacter = Instantiate(matchHandler.characterPrefabs[(int)SNBGlobal.thisUser.character], matchHandler.isServer ? spawnPoints[0].transform : spawnPoints[1].transform);
         opponentCharacter = Instantiate(matchHandler.characterPrefabs[(int)matchHandler.opponent.character], matchHandler.isServer ? spawnPoints[1].transform : spawnPoints[0].transform);
-        opponentCharacter.GetComponent<PlayerMovement>().role = PlayerRole.Opponent;
-        opponentCharacter.GetComponent<PlayerAttack>().role = PlayerRole.Opponent;
+        opponentCharacter.GetComponent<PlayerManagement>().role = PlayerRole.Opponent;
 	}
 }
