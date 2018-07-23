@@ -10,7 +10,7 @@ using UnityEngine.SceneManagement;
 
 using TMPro;
 
-public class MenuController : MonoBehaviour {
+public class MenuController : DispatchBehavior {
 
     [Header("General")]
     [SerializeField] TextMeshProUGUI pressToStartText;
@@ -43,7 +43,6 @@ public class MenuController : MonoBehaviour {
     private enum ConnectionMessageState { Loading, Success, Error };
 
     MenuScreens currentScreen = MenuScreens.None;
-    Queue<Action> mainThreadEvents = new Queue<Action>();
     CharacterType highlightedCharacter = CharacterType.Classico;
     Resolution[] resolutions;
     MatchHandler currentMatch;
@@ -80,13 +79,6 @@ public class MenuController : MonoBehaviour {
         audioSource.playOnAwake = playsOnAwake;
         audioSource.volume = volume;
         return audioSource;
-    }
-
-    private void DispatchActions() {
-        while (mainThreadEvents.Count > 0) {
-            Action action = mainThreadEvents.Dequeue();
-            action();
-        }
     }
 
 //       _____ _             _               

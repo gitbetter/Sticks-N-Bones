@@ -1,5 +1,6 @@
 import socket
 import threading
+import time
 import sys
 import random
 import json
@@ -22,6 +23,8 @@ class Server():
         return Server._singleton
 
     def __init__(self):
+        # Constants
+        self.CLIENT_TIMEOUT = 10
         # Networking
         self.running = False
         self.sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -29,6 +32,7 @@ class Server():
         self.network_thread = threading.Thread(group=None, target=self.StartServerNetworking, kwargs={})
         self.interactive_thread = threading.Thread(group=None, target=self.StartServerInteractive, kwargs={})
         self.matchmaking_thread = threading.Thread(group=None, target=self.StartMatchmakingHandler, kwargs={})
+        self.ping_thread = threading.Thread(group=None, target=self.StartPingHandler, kwargs={})
         # Data Structures
         self.online_clients = []
         self.waiting_for_match = []
@@ -39,6 +43,7 @@ class Server():
         self.in_match_lock = threading.Lock()
         self.matchmaking_wait_cond = threading.Condition()
         # Misc.
+
         self.command_map = {'players': self.ListPlayers}
 
     def StartServerNetworking(self):
@@ -101,6 +106,20 @@ class Server():
 
         self.matchmaking_wait_cond.release()
 
+    def StartPingHandler(self):
+        while self.running:
+            for client in self.online_clients:
+                if client.ping_reply_timer == 0:
+                    try:
+                        client.sock.send(json.dumps({'request': 'ping'}).encode())
+                    except ConnectionAbortedError:
+                        client.CloseConnection(None)
+                elif client.ping_reply_timer > self.CLIENT_TIMEOUT:
+                    client.CloseConnection()
+                else:
+                    client.IncrementPingTimer()
+            time.sleep(1)
+
     def ListPlayers(self):
         print("\n" + '-' * 22 + " Online Players " + '-' * 22 + "\n")
         if len(self.online_clients) == 0:
@@ -160,6 +179,7 @@ class Server():
         self.network_thread.start()
         self.interactive_thread.start()
         self.matchmaking_thread.start()
+        self.ping_thread.start()
 
     def Shutdown(self):
         self.CloseAllClients()
@@ -186,10 +206,13 @@ class ClientHandler:
         # Threads
         self.msg_thread = threading.Thread(group=None, target=self.HandleSocketConnection, kwargs={})
         self.msg_thread.start()
+        self.ping_timer_lock = threading.Lock()
         # Misc.
+        self.ping_reply_timer = 0
         self.command_map = {'match': self.HandleMatchmaking,
                             'set': self.SetClientData,
                             'msg': self.NewChatMessage,
+                            'pong': self.HandlePong,
                             'exit': self.CloseConnection}
 
     def HandleSocketConnection(self):
@@ -221,6 +244,19 @@ class ClientHandler:
         user, message = arg.split(",", 1)
         if message:
             Server.main().BroadcastMessage(self, message.strip())
+
+    def HandlePong(self, arg):
+        self.ResetPingTimer()
+
+    def ResetPingTimer(self):
+        self.ping_timer_lock.acquire()
+        self.ping_reply_timer = 0
+        self.ping_timer_lock.release()
+
+    def IncrementPingTimer(self):
+        self.ping_timer_lock.acquire()
+        self.ping_reply_timer += 1
+        self.ping_timer_lock.release()
 
     def CloseConnection(self, arg):
         print("\r|Sticks N' Bones| - %s:%s jumping offline" % self.addr)

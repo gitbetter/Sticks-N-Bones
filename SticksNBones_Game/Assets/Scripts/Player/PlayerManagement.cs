@@ -1,8 +1,9 @@
-﻿using System.Collections;
+﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
-public class PlayerManagement : MonoBehaviour {
+public class PlayerManagement : DispatchBehavior {
 
     [HideInInspector] public SNBPlayer player = new SNBPlayer();
     [SerializeField] public PlayerRole role = PlayerRole.Local;
@@ -14,7 +15,15 @@ public class PlayerManagement : MonoBehaviour {
         player.state.OnStateChanged += SendPlayerState;
     }
 
+    private void Update() {
+        DispatchActions();
+    }
+
     private void SendPlayerState() {
-        matchHandler.SendPlayerStateToOpponent(player.state);
+        if (role == PlayerRole.Local) {
+            mainThreadEvents.Enqueue(() => {
+                matchHandler.SendPlayerStateToOpponent(player.state);
+            });
+        }
     }
 }

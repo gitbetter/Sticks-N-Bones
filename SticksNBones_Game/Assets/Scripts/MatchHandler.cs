@@ -164,9 +164,7 @@ public class MatchHandler : MonoBehaviour {
                     opponent.username = username;
                     break;
                 case "state":
-                    string state;
-                    result.GetField(out state, "result", null);
-                    UpdateOpponentState(state);
+                    UpdateOpponentState(result.ToString());
                     break;
                 default:
                     break;
@@ -220,7 +218,7 @@ public class MatchHandler : MonoBehaviour {
     public void SendPlayerDataToOpponent() {
         if (status == ConnectionState.Connected) {
             byte error;
-            byte[] message = Encoding.UTF8.GetBytes("{'messageType': 'info', 'result': {'username': '" + SNBGlobal.thisUser.username + "'}}");
+            byte[] message = Encoding.UTF8.GetBytes("{\"messageType\": \"info\", \"result\": {\"username\": \"" + SNBGlobal.thisUser.username + "\"}}");
             NetworkTransport.Send(hostId, connectionId, channelId, message, message.Length, out error);
 
             if ((NetworkError)error != NetworkError.Ok) {
@@ -232,7 +230,7 @@ public class MatchHandler : MonoBehaviour {
     public void SendPlayerStateToOpponent(SNBPlayerState state) {
         if (status == ConnectionState.Connected) {
             byte error;
-            byte[] message = Encoding.UTF8.GetBytes("{'messageType': 'state', 'result': " + state.ToJson() + "}");
+            byte[] message = Encoding.UTF8.GetBytes("{\"messageType\": \"state\", \"result\": " + state.ToJson() + "}");
             NetworkTransport.Send(hostId, connectionId, channelId, message, message.Length, out error);
 
             if ((NetworkError)error != NetworkError.Ok) {
@@ -251,7 +249,10 @@ public class MatchHandler : MonoBehaviour {
     private static void UpdateOpponentState(string state) {
         PlayerManagement[] playerManagers = FindObjectsOfType<PlayerManagement>();
         foreach (PlayerManagement pm in playerManagers) {
-            if (pm.role == PlayerRole.Opponent) pm.player.state = SNBPlayerState.FromJson(state);
+            if (pm.role == PlayerRole.Opponent) {
+                pm.player.state = SNBPlayerState.FromJson(state);
+                print("Opponent state updated");
+            }
         }
     }
 

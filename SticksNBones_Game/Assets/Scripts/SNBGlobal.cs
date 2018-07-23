@@ -1,7 +1,8 @@
-﻿using System.Collections;
+﻿using System;
+using System.Collections;
 using System.Collections.Generic;
-using System;
 using System.Timers;
+using System.Text;
 
 using UnityEngine;
 
@@ -42,10 +43,10 @@ public class MoveInfo {
     }
 
     public string toJson() {
-        return "{\"move\": " + move.ToString() + ", " +
+        return "{\"move\": \"" + move.ToString() + "\", " +
                 "\"sequenceNumber\": " + sequenceNumber + ", " +
                 "\"sequenceTime\": " + sequenceTime + ", " +
-                "\"moveKey\": " + moveKey + "}";
+                "\"moveKey\": \"" + moveKey + "\"}";
     }
 
     public static MoveInfo fromJson(string json) {
@@ -177,7 +178,7 @@ public class SNBPlayerState {
         set {
             if (value != _grounded) {
                 _grounded = value;
-                OnStateChanged();
+                if (OnStateChanged != null) OnStateChanged();
             }
         }
     }
@@ -187,7 +188,7 @@ public class SNBPlayerState {
         set {
             if (value != _dashing) {
                 _dashing = value;
-                OnStateChanged();
+                if (OnStateChanged != null) OnStateChanged();
             }
         }
     }
@@ -197,7 +198,7 @@ public class SNBPlayerState {
         set {
             if (value != _skipping) {
                 _skipping = value;
-                OnStateChanged();
+                if (OnStateChanged != null) OnStateChanged();
             }
         }
     }
@@ -207,7 +208,7 @@ public class SNBPlayerState {
         set {
             if (value != _blocking) {
                 _blocking = value;
-                OnStateChanged();
+                if (OnStateChanged != null) OnStateChanged();
             }
         }
     }
@@ -217,7 +218,7 @@ public class SNBPlayerState {
         set {
             if (value != _crouching) {
                 _crouching = value;
-                OnStateChanged();
+                if (OnStateChanged != null) OnStateChanged();
             }
         }
     }
@@ -227,7 +228,7 @@ public class SNBPlayerState {
         set {
             if (value != _attacking) {
                 _attacking = value;
-                OnStateChanged();
+                if (OnStateChanged != null) OnStateChanged();
             }
         }
     }
@@ -237,7 +238,7 @@ public class SNBPlayerState {
         set {
             if (value != _lastHorizontal) {
                 _lastHorizontal = value;
-                OnStateChanged();
+                if (OnStateChanged != null) OnStateChanged();
             }
         }
     }
@@ -247,7 +248,7 @@ public class SNBPlayerState {
         set {
             if (value != _lastVertical) {
                 _lastVertical = value;
-                OnStateChanged();
+                if (OnStateChanged != null) OnStateChanged();
             }
         }
     }
@@ -260,7 +261,7 @@ public class SNBPlayerState {
         set {
             if (value != _facing) {
                 _facing = value;
-                OnStateChanged();
+                if (OnStateChanged != null) OnStateChanged();
                 if (OnDirectionFlipped != null)
                     OnDirectionFlipped();
             }
@@ -288,7 +289,7 @@ public class SNBPlayerState {
     public void AddToCombo(BasicMove move) {
         MoveInfo m = new MoveInfo(move, currentCombo.Count + 1, elapsedComboTime);
         currentCombo.Add(m);
-        OnStateChanged();
+        if (OnStateChanged != null) OnStateChanged();
 
         if (inCombo) {
             CheckCombo(currentCombo);
@@ -315,11 +316,11 @@ public class SNBPlayerState {
         comboTimer.Stop();
         currentCombo.Clear();
         elapsedComboTime = 0;
-        OnStateChanged();
+        if (OnStateChanged != null) OnStateChanged();
     }
 
     public string ToJson() {
-        return "{\"dashing\": " + _dashing + ", " +
+        string json = "{\"dashing\": " + _dashing + ", " +
                 "\"skipping\": " + _skipping + ", " +
                 "\"blocking\": " + _blocking + ", " +
                 "\"crouching\": " + _crouching + ", " +
@@ -328,14 +329,15 @@ public class SNBPlayerState {
                 "\"lastHorizontalThrow\": " + _lastHorizontal + ", " +
                 "\"lastVerticalThrow\": " + _lastVertical + ", " +
                 "\"currentCombo\": " + currentComboToJson() + "}";
+        return json;
     }
 
-    public string currentComboToJson() {
-        string currentComboJson = "[";
+    public string currentComboToJson() {        
+        StringBuilder currentComboJson = new StringBuilder("[");
         foreach (MoveInfo m in currentCombo) {
-            currentComboJson += m.toJson() + ", ";
+            currentComboJson.Append(m.toJson() + ", ");
         }
-        return currentComboJson.Length > 1 ? currentComboJson.Substring(0, currentComboJson.Length - 2) + "]" : currentComboJson + "]";
+        return currentComboJson.Length > 1 ? currentComboJson.Remove(currentComboJson.Length - 2, 2).ToString() + "]" : currentComboJson.ToString() + "]";
     }
 
     public static SNBPlayerState FromJson(string json) {
@@ -353,12 +355,14 @@ public class SNBPlayerState {
         obj.GetField(out attacking, "attacking", false);
         obj.GetField(out grounded, "grounded", false);
         obj.GetField(out lastHorizontal, "lastHorizontalThrow", 0f);
-        obj.GetField(out lastVertical, "lastVerticalThrow", 0);
+        obj.GetField(out lastVertical, "lastVerticalThrow", 0f);
         obj.GetField(out comboMovesArrayStr, "currentCombo", null);
 
-        JSONObject comboMoves = new JSONObject(comboMovesArrayStr);
-        foreach(JSONObject j in comboMoves.list) {
-            currentCombo.Add(MoveInfo.fromJson(j.ToString()));
+        if (comboMovesArrayStr != null) {
+            JSONObject comboMoves = new JSONObject(comboMovesArrayStr);
+            foreach (JSONObject j in comboMoves.list) {
+                currentCombo.Add(MoveInfo.fromJson(j.ToString()));
+            }
         }
 
         newState.dashing = dashing;

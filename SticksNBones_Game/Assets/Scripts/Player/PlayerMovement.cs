@@ -5,8 +5,8 @@ using UnityEngine;
 
 public class PlayerMovement : MonoBehaviour {
 
-    [SerializeField] float dashSpeed = 6.12f;
-    [SerializeField] float skipSpeed = 1.23f;
+    [SerializeField] float dashSpeed = 12f;
+    [SerializeField] float skipSpeed = 2.18f;
     [SerializeField] float jumpVelocity = 12.0f;
     [SerializeField] float dashbackUpVelocity = 8.0f;
 
@@ -27,26 +27,15 @@ public class PlayerMovement : MonoBehaviour {
         if (role == PlayerRole.Local) {
             RespondToHAxis();
             RespondToVAxis();
-            CharacterJump();
+            RespondToJump();
         }
+        Move();
+        Jump();
         LookAtOpponent();
     }
 
-    private void RespondToHAxis() {
-        float horizontalMove = Input.GetAxisRaw("Horizontal");
-        player.state.lastHorizontal = horizontalMove;
-        Move();
-    }
-
-    private void RespondToVAxis() {
-        float verticalMove = Input.GetAxisRaw("Vertical");
-        player.state.lastVertical = verticalMove;
-        Move();
-    }
-
-    private void CharacterJump() {
-        if ((Input.GetButtonDown("Jump") || player.state.lastVertical > 0) 
-            && player.state.grounded) {
+    private void Jump() {
+        if (player.state.lastVertical > 0 && player.state.grounded) {
             player.state.grounded = false;
             GetComponent<Rigidbody>().velocity = new Vector3(0, jumpVelocity);
             if (player.state.idle) {
@@ -54,6 +43,22 @@ public class PlayerMovement : MonoBehaviour {
             } else {
                 playerAnimator.CrossFade("MovingJump", 0.2f);
             }
+        }
+    }
+
+    private void RespondToHAxis() {
+        float horizontalMove = Input.GetAxisRaw("Horizontal");
+        player.state.lastHorizontal = horizontalMove;
+    }
+
+    private void RespondToVAxis() {
+        float verticalMove = Input.GetAxisRaw("Vertical");
+        player.state.lastVertical = verticalMove;
+    }
+
+    private void RespondToJump() {
+        if (Input.GetButtonDown("Jump") || player.state.lastVertical > 0) {
+            player.state.lastVertical = 1.0f;
         }
     }
 

@@ -116,6 +116,9 @@ public class SNBNetwork : MonoBehaviour {
                     response.GetField(out message, "message", null);
                     OnChatMessage(otherUsername, message);
                     break;
+                case "ping":
+                    SendRequest("pong: 0");
+                    break;
                 default:
                     break;
             }
